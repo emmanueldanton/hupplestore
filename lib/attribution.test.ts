@@ -32,7 +32,7 @@ function spend(overrides: Partial<AdSpendRecord> = {}): AdSpendRecord {
 
 const range = { from: "2026-08-01", to: "2026-08-03" };
 
-describe("buildReport — indicateurs de tête", () => {
+describe("buildReport : indicateurs de tête", () => {
   it("calcule marge et ROAS à partir du net, pas du brut", () => {
     const report = buildReport({
       ...range,
@@ -63,7 +63,7 @@ describe("buildReport — indicateurs de tête", () => {
   });
 });
 
-describe("buildReport — attribution", () => {
+describe("buildReport : attribution", () => {
   it("attribue le revenu à la campagne qui poussait le produit ce jour-là", () => {
     const report = buildReport({
       ...range,
@@ -177,7 +177,7 @@ describe("buildReport — attribution", () => {
   });
 });
 
-describe("buildReport — seuil de rentabilité", () => {
+describe("buildReport : seuil de rentabilité", () => {
   it("fixe le seuil au net moyen par vente", () => {
     const report = buildReport({
       ...range,
@@ -195,7 +195,7 @@ describe("buildReport — seuil de rentabilité", () => {
   });
 });
 
-describe("buildReport — série temporelle", () => {
+describe("buildReport : série temporelle", () => {
   it("comble les jours sans activité", () => {
     const report = buildReport({
       ...range,

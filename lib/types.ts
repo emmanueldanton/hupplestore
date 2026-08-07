@@ -101,7 +101,7 @@ export interface Kpis {
 /**
  * Revenu qu'aucune campagne ne peut revendiquer : ventes de produits sans
  * campagne active ce jour-là (organique, réseaux, bouche-à-oreille).
- * Toujours affiché — un tableau de bord qui l'enfouit ment par omission.
+ * Toujours affiché : un tableau de bord qui l'enfouit ment par omission.
  */
 export interface Unattributed {
   sales: number;

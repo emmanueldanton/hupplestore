@@ -4,7 +4,7 @@ import type { CampaignPerformance } from "@/lib/types";
 
 /**
  * Tableau des campagnes, trié par marge décroissante : ce qui rapporte en haut,
- * ce qui coûte en bas. Le tri par ROAS serait trompeur — une campagne à ROAS
+ * ce qui coûte en bas. Le tri par ROAS serait trompeur : une campagne à ROAS
  * 5× sur 2 000 F de dépense pèse moins qu'une campagne à 1,4× sur 200 000 F.
  */
 export function CampaignTable({
@@ -60,7 +60,7 @@ export function CampaignTable({
                       </>
                     ) : (
                       <span className="text-negative">
-                        Non mappée — aucun revenu ne lui est attribué
+                        Non mappée : aucun revenu ne lui est attribué
                       </span>
                     )}
                   </div>
@@ -113,12 +113,12 @@ export function CampaignTable({
                       overBreakEven ? "text-negative" : "text-ink"
                     }`}
                   >
-                    {campaign.cpaXof === null ? "—" : formatXof(campaign.cpaXof)}
+                    {campaign.cpaXof === null ? "n/d" : formatXof(campaign.cpaXof)}
                   </div>
                   <div className="mt-0.5 text-[0.7rem] text-ink-muted">
                     seuil{" "}
                     {campaign.breakEvenCpaXof === null
-                      ? "—"
+                      ? "n/d"
                       : formatXof(campaign.breakEvenCpaXof)}
                   </div>
                 </Td>

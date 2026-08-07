@@ -82,12 +82,12 @@ export function formatEur(amountXof: number): string {
 
 /** Formate un ROAS : « 2,4× ». null quand il n'est pas calculable. */
 export function formatRoas(roas: number | null): string {
-  if (roas === null) return "—";
+  if (roas === null) return "n/d";
   return `${roas.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}×`;
 }
 
 export function formatPercent(ratio: number | null, withSign = true): string {
-  if (ratio === null) return "—";
+  if (ratio === null) return "n/d";
   const pct = ratio * 100;
   const sign = withSign && pct > 0 ? "+" : "";
   return `${sign}${pct.toLocaleString("fr-FR", { maximumFractionDigits: 1 })}${nbsp}%`;

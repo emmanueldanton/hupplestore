@@ -37,7 +37,7 @@ function toSlots(daily: DailyPoint[]): Slot[] {
     const last = chunk[chunk.length - 1];
     slots.push({
       label: formatDayLabel(first.date),
-      fullLabel: `${formatDayLabel(first.date)} – ${formatDayLabel(last.date)}`,
+      fullLabel: `${formatDayLabel(first.date)} au ${formatDayLabel(last.date)}`,
       spendXof: chunk.reduce((sum, p) => sum + p.spendXof, 0),
       netXof: chunk.reduce((sum, p) => sum + p.netXof, 0),
       sales: chunk.reduce((sum, p) => sum + p.sales, 0),

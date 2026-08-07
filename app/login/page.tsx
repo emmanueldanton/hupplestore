@@ -33,7 +33,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             Tableau de bord
           </h1>
           <p className="mt-2 text-[0.88rem] text-white/75">
-            Rentabilité publicitaire — accès réservé.
+            Rentabilité publicitaire : accès réservé.
           </p>
         </div>
 

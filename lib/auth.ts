@@ -3,7 +3,7 @@
  *
  * Un seul utilisateur, un seul mot de passe : inutile de sortir une base
  * d'utilisateurs ou une bibliothèque de sessions. Le jeton de session est
- * dérivé des identifiants eux-mêmes, ce qui donne une propriété utile —
+ * dérivé des identifiants eux-mêmes, ce qui donne une propriété utile :
  * changer le mot de passe invalide immédiatement toutes les sessions ouvertes,
  * sans rien à purger.
  */

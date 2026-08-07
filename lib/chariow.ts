@@ -17,13 +17,16 @@ interface ChariowSale {
   status: string;
   amount: ChariowAmount | null;
   original_amount: ChariowAmount | null;
-  settlement: {
+  // `settlement` et `context` sont absents de la réponse REST : seul le
+  // connecteur MCP les renvoie. Déclarés optionnels pour refléter la réalité
+  // du contrat, et non la documentation.
+  settlement?: {
     amount: ChariowAmount | null;
     service_fee: ChariowAmount | null;
   } | null;
-  payment: { fee: ChariowAmount | null } | null;
+  payment?: { fee?: ChariowAmount | null } | null;
   product: { id: string; name: string } | null;
-  context: { country: { name: string } | null } | null;
+  context?: { country: { name: string } | null } | null;
   completed_at: string | null;
   created_at: string | null;
 }
@@ -49,18 +52,46 @@ export class ChariowError extends Error {
 }
 
 /**
+ * Part du montant de vente réellement reversée, une fois les prélèvements
+ * déduits. 0,85 correspond au barème constaté sur le plan Starter :
+ *
+ *   frais du prestataire de paiement (Moneroo)  8 %
+ *   frais de service Chariow                    7 %
+ *   ────────────────────────────────────────────────
+ *   total prélevé                              15 %
+ *
+ * Vérifié sur une vente réelle : 4 999 × 0,85 = 4 249,15, valeur identique au
+ * `settlement.amount` relevé sur cette même vente.
+ *
+ * Ce taux dépend du plan tarifaire : le passage à un plan supérieur le change.
+ * D'où la variable d'environnement, plutôt qu'une constante enfouie.
+ */
+export const DEFAULT_NET_RATE = 0.85;
+
+export function getNetRate(): number {
+  const raw = process.env.CHARIOW_NET_RATE;
+  if (!raw) return DEFAULT_NET_RATE;
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 && value <= 1
+    ? value
+    : DEFAULT_NET_RATE;
+}
+
+/**
  * Calcule le montant réellement encaissé.
  *
- * Deux prélèvements successifs s'appliquent, et non un seul :
- *   net = montant payé − frais du prestataire de paiement − frais de service Chariow
+ * L'endpoint REST `/v1/sales` ne renvoie **ni** `settlement`, **ni**
+ * `payment.fee` : contrairement au connecteur MCP de Chariow, qui expose une
+ * sérialisation plus riche mais n'est pas utilisable depuis un serveur.
  *
- * Vérifié sur une vente réelle : 4 999 − 399,92 − 349,93 = 4 249,15, ce qui
- * correspond exactement au `settlement.amount` renvoyé par l'API.
- *
- * On privilégie toujours `settlement.amount` quand il est présent : c'est le
- * montant constaté. Le calcul n'est qu'un repli, signalé comme tel.
+ * Le net est donc dérivé du taux ci-dessus, et systématiquement marqué comme
+ * calculé. Le cas `settlement` est conservé : si Chariow enrichit un jour sa
+ * réponse REST, le montant constaté prendra automatiquement le dessus.
  */
-export function resolveNetAmount(sale: ChariowSale): {
+export function resolveNetAmount(
+  sale: ChariowSale,
+  netRate: number = DEFAULT_NET_RATE,
+): {
   netXof: number;
   estimated: boolean;
 } {
@@ -70,9 +101,16 @@ export function resolveNetAmount(sale: ChariowSale): {
   }
 
   const gross = sale.amount?.value ?? 0;
-  const paymentFee = sale.payment?.fee?.value ?? 0;
-  const serviceFee = sale.settlement?.service_fee?.value ?? 0;
-  return { netXof: gross - paymentFee - serviceFee, estimated: true };
+
+  // Repli historique : si les deux lignes de frais sont présentes, elles valent
+  // mieux qu'un taux moyen.
+  const paymentFee = sale.payment?.fee?.value;
+  const serviceFee = sale.settlement?.service_fee?.value;
+  if (typeof paymentFee === "number" && typeof serviceFee === "number") {
+    return { netXof: gross - paymentFee - serviceFee, estimated: true };
+  }
+
+  return { netXof: gross * netRate, estimated: true };
 }
 
 /** Extrait le jour UTC (YYYY-MM-DD) d'un horodatage ISO. */
@@ -80,7 +118,7 @@ function toUtcDay(iso: string): string {
   return iso.slice(0, 10);
 }
 
-function normalize(sale: ChariowSale): SaleRecord | null {
+function normalize(sale: ChariowSale, netRate: number): SaleRecord | null {
   const gross = sale.amount?.value ?? 0;
 
   // Périmètre : ventes finalisées et réellement payées. Les ventes à 0 F
@@ -91,7 +129,7 @@ function normalize(sale: ChariowSale): SaleRecord | null {
   const timestamp = sale.completed_at ?? sale.created_at;
   if (!timestamp) return null;
 
-  const { netXof, estimated } = resolveNetAmount(sale);
+  const { netXof, estimated } = resolveNetAmount(sale, netRate);
 
   return {
     id: sale.id,
@@ -117,12 +155,18 @@ export async function fetchSales(
   apiKey: string,
 ): Promise<SaleRecord[]> {
   const sales: SaleRecord[] = [];
+  const netRate = getNetRate();
   let cursor: string | null = null;
   let pages = 0;
 
   do {
     const url = new URL(`${API_BASE}/sales`);
-    url.searchParams.set("status", "completed");
+    // Volontairement PAS de filtre `status` côté requête.
+    //
+    // Une vente payée passe de `completed` à `settled` une fois le versement
+    // effectué. Filtrer sur `status=completed` dans l'URL écarte donc toutes
+    // les ventes anciennes : sur cette boutique, 237 ventes `settled` contre 9
+    // `completed`. Le tri se fait dans normalize(), qui accepte les deux.
     url.searchParams.set("start_date", from);
     url.searchParams.set("end_date", to);
     url.searchParams.set("per_page", "100");
@@ -149,7 +193,7 @@ export async function fetchSales(
     const payload = (await response.json()) as ChariowListResponse;
 
     for (const sale of payload.data ?? []) {
-      const record = normalize(sale);
+      const record = normalize(sale, netRate);
       if (record) sales.push(record);
     }
 

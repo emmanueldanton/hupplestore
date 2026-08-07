@@ -55,7 +55,7 @@ export function resolvePeriod(
   };
 }
 
-/** « 9 juil. – 7 août 2026 », pour l'en-tête. */
+/** « du 9 juil. au 7 août 2026 », pour l'en-tête. */
 export function formatRange(range: Range): string {
   const from = new Date(`${range.from}T00:00:00Z`);
   const to = new Date(`${range.to}T00:00:00Z`);
@@ -70,7 +70,7 @@ export function formatRange(range: Range): string {
     year: "numeric",
     timeZone: "UTC",
   });
-  return `${short.format(from)} – ${long.format(to)}`;
+  return `${short.format(from)} au ${long.format(to)}`;
 }
 
 export function formatDayLabel(day: string): string {

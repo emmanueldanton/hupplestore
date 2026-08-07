@@ -22,7 +22,7 @@ describe("conversion", () => {
   });
 
   it("refuse une devise sans taux plutôt que d'inventer un chiffre", () => {
-    // Un taux inventé produirait un ROAS faux mais crédible — le pire des cas.
+    // Un taux inventé produirait un ROAS faux mais crédible : le pire des cas.
     expect(() => toXof(100, "USD")).toThrow(UnsupportedCurrencyError);
   });
 
@@ -59,7 +59,7 @@ describe("formatage", () => {
   });
 
   it("distingue un ROAS incalculable d'un ROAS nul", () => {
-    expect(formatRoas(null)).toBe("—");
+    expect(formatRoas(null)).toBe("n/d");
     expect(formatRoas(0)).toBe("0×");
     expect(formatRoas(4.25)).toBe("4,25×");
   });

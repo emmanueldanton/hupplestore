@@ -29,7 +29,7 @@ export function Hero({
   const roas = report.kpis.roas;
 
   // Sans aucune vente ni dépense, il n'y a pas de verdict à rendre. Annoncer
-  // « tu gagnes de l'argent » sur une marge de 0 F serait un mensonge poli —
+  // « tu gagnes de l'argent » sur une marge de 0 F serait un mensonge poli,
   // et c'est exactement ce qu'affiche un tableau de bord mal configuré.
   const hasData = report.kpis.sales > 0 || report.kpis.spendXof > 0;
   const isProfitable = hasData && report.kpis.marginXof >= 0;
@@ -85,7 +85,7 @@ export function Hero({
           </p>
         </div>
 
-        {/* Panneau de verre — l'équivalent de la carte bancaire de la référence. */}
+        {/* Panneau de verre : l'équivalent de la carte bancaire de la référence. */}
         <div className="glass w-full max-w-sm p-6">
           <div className="flex items-center justify-between">
             <span className="text-[0.78rem] font-medium text-white/70">

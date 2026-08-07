@@ -1,5 +1,5 @@
 import { buildReport } from "./attribution";
-import { fetchSales } from "./chariow";
+import { fetchSales, getNetRate } from "./chariow";
 import { fetchAdSpend } from "./meta";
 import { loadCampaignMap, loadConfig, ConfigError } from "./config";
 import { resolvePeriod, type PeriodKey } from "./period";
@@ -111,8 +111,9 @@ export async function loadDashboard(period: PeriodKey): Promise<DashboardData> {
   }
 
   if (report.hasEstimatedNet) {
+    const rate = Math.round((1 - getNetRate()) * 100);
     warnings.push(
-      "Certaines ventes n'ont pas encore de reversement constaté : leur net est recalculé (montant − frais de paiement − frais de service) et peut varier légèrement.",
+      `L'API Chariow ne renvoie pas le montant reversé : le net est calculé en déduisant ${rate} % de prélèvements (frais de paiement + frais de service). Vérifie ce taux sur un relevé réel, et ajuste CHARIOW_NET_RATE s'il a changé : un plan tarifaire différent le modifie.`,
     );
   }
 

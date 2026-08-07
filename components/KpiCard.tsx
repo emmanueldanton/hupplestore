@@ -24,7 +24,7 @@ export function KpiCard({
   higherIsBetter?: boolean;
   showEur?: boolean;
   signed?: boolean;
-  /** Colore le fond selon le signe — réservé à la marge. */
+  /** Colore le fond selon le signe : réservé à la marge. */
   accent?: boolean;
 }) {
   const delta = computeDelta(value, previous);

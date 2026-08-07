@@ -1,4 +1,4 @@
-# Tableau de bord de rentabilité HUPPLE STORE — spécification
+# Tableau de bord de rentabilité HUPPLE STORE : spécification
 
 **Date** : 8 août 2026
 **Auteur** : Emmanuel DANTON, avec Claude
@@ -18,7 +18,7 @@ se parlent pas.
 
 L'API Chariow **n'attache aucune campagne à ses ventes**. Le champ `campaign` de
 chaque vente est systématiquement `null`, et aucun UTM n'est conservé au niveau
-de la transaction — Chariow n'expose les `sources` / `mediums` / `referrers`
+de la transaction : Chariow n'expose les `sources` / `mediums` / `referrers`
 qu'au niveau des *visites*.
 
 Une jointure « vente X ← campagne Y » est donc impossible à partir des données
@@ -33,7 +33,7 @@ disponibles. Toute la conception en découle.
 | Forme | Application Next.js déployable sur Vercel | Script local ; Google Sheet |
 | Définition du revenu | Net réellement reversé, ventes de test exclues | Brut ; brut et net côte à côte |
 | Devises | XOF principal, EUR en second | XOF seul ; EUR seul |
-| Stockage | Aucun — appels directs, cache 15 min | Base Supabase : une synchronisation de plus à maintenir, sans bénéfice au volume actuel |
+| Stockage | Aucun : appels directs, cache 15 min | Base Supabase : une synchronisation de plus à maintenir, sans bénéfice au volume actuel |
 
 ## Règle de calcul du revenu
 
@@ -74,9 +74,9 @@ jour.
 
 ## Limites assumées
 
-- **Fuseaux horaires** — Meta agrège selon le fuseau du compte publicitaire,
+- **Fuseaux horaires** : Meta agrège selon le fuseau du compte publicitaire,
   Chariow horodate en UTC. Décalage possible d'un jour aux bornes de période.
-- **Délai d'achat** — un clic du lundi peut devenir un achat du jeudi ; la
+- **Délai d'achat** : un clic du lundi peut devenir un achat du jeudi ; la
   jointure par jour l'ignore.
 
 Conséquence portée dans l'interface : **ne jamais juger une campagne sur moins
@@ -89,7 +89,7 @@ app/page.tsx        Écran unique, Server Component, période via searchParams
 proxy.ts            Authentification HTTP Basic (ex-middleware, renommé en Next 16)
 lib/chariow.ts      Client REST + pagination cursor + normalisation
 lib/meta.ts         Client Insights + conversion de devise
-lib/attribution.ts  Jointure (jour × produit) — cœur du système, testé isolément
+lib/attribution.ts  Jointure (jour × produit) : cœur du système, testé isolément
 lib/money.ts        Parité XOF/EUR (655,957, fixe) et formatage
 lib/report.ts       Orchestration, tolérance aux pannes partielles
 config/campaign-map.json
@@ -119,11 +119,11 @@ de bord de rentabilité doit montrer ce qui reste, pas ce qui entre.
 
 33 tests couvrent les deux modules où une erreur coûte de l'argent :
 
-- `lib/money.test.ts` — parité fixe, refus des devises sans taux, formatage,
+- `lib/money.test.ts` : parité fixe, refus des devises sans taux, formatage,
   variations à base nulle ou négative.
-- `lib/chariow.test.ts` — les deux prélèvements, le repli, la valeur observée en
+- `lib/chariow.test.ts` : les deux prélèvements, le repli, la valeur observée en
   production.
-- `lib/attribution.test.ts` — répartition proportionnelle, absence de double
+- `lib/attribution.test.ts` : répartition proportionnelle, absence de double
   comptage, revenu non attribué, campagnes non mappées, seuil de rentabilité,
   comblement des jours vides.
 

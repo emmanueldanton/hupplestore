@@ -1,4 +1,4 @@
-# Tableau de bord de rentabilité — HUPPLE STORE
+# Tableau de bord de rentabilité HUPPLE STORE
 
 Confronte les **dépenses Facebook Ads** au **net réellement encaissé** sur la
 boutique Chariow, pour répondre à une seule question : est-ce que la publicité
@@ -47,7 +47,7 @@ Les identifiants de tes huit produits sont listés dans le bloc
 `_produits_disponibles` du même fichier.
 
 Une campagne absente de cette table apparaît en **« Non mappée »** : sa dépense
-est comptée, mais aucun revenu ne lui est attribué. C'est volontaire — mieux
+est comptée, mais aucun revenu ne lui est attribué. C'est volontaire : mieux
 vaut un trou visible qu'un ROAS flatteur et faux.
 
 ### 4. Lancer
@@ -67,14 +67,36 @@ Le montant retenu est le **net réellement reversé**, pas le prix affiché. Deu
 prélèvements s'appliquent successivement :
 
 ```
-net = montant payé − frais du prestataire de paiement − frais de service Chariow
+frais du prestataire de paiement (Moneroo)   8 %
+frais de service Chariow                     7 %
+                                            ────
+total prélevé                               15 %
 ```
 
 Concrètement, une vente à 4 999 F rapporte **4 249 F**. Raisonner sur le brut
 surestimerait la rentabilité d'environ 15 %.
 
-Sont exclues : les ventes non finalisées et les ventes à 0 F issues des codes de
-test (`ZEROO`, `GRATUIT`).
+**L'API REST ne renvoie pas ce montant.** Elle expose `amount`, mais ni
+`settlement`, ni `payment.fee` : seul le connecteur MCP de Chariow les fournit,
+et il n'est pas utilisable depuis un serveur. Le net est donc calculé en
+appliquant le taux ci-dessus, ajustable via `CHARIOW_NET_RATE`, et le tableau de
+bord signale explicitement qu'il s'agit d'un calcul et non d'un constat.
+
+Si tu changes de plan tarifaire, vérifie le taux sur un relevé réel et ajuste la
+variable : c'est le seul chiffre du système qui ne peut pas se valider tout seul.
+
+### Le périmètre
+
+Sont retenues les ventes `completed` **et `settled`**, avec un montant supérieur
+à zéro.
+
+Le statut `settled` est celui d'une vente dont le versement a été effectué :
+c'est donc l'état normal des ventes anciennes. Sur cette boutique, 237 ventes
+sont `settled` contre 9 `completed`. Filtrer sur le seul statut `completed`, ce
+qui semble pourtant naturel, écarterait la quasi-totalité du chiffre d'affaires.
+
+Sont exclues : les ventes échouées ou abandonnées, et les ventes à 0 F issues des
+codes de test (`ZEROO`, `GRATUIT`).
 
 ### L'attribution
 
@@ -91,9 +113,9 @@ attribué »**, affiché en clair.
 
 ### Les limites, à connaître avant de décider
 
-- **Fuseaux horaires** — Meta agrège selon le fuseau du compte publicitaire,
+- **Fuseaux horaires** : Meta agrège selon le fuseau du compte publicitaire,
   Chariow horodate en UTC. Un décalage d'un jour peut apparaître aux bornes.
-- **Délai d'achat** — un clic du lundi peut devenir un achat du jeudi. La
+- **Délai d'achat** : un clic du lundi peut devenir un achat du jeudi. La
   jointure par jour l'ignore.
 
 Conséquence pratique : **ne juge jamais une campagne sur moins de 7 jours.**
@@ -128,7 +150,7 @@ attributs `autocomplete` attendus, donc le gestionnaire de mots de passe du
 navigateur propose d'enregistrer les identifiants.
 
 Le mot de passe ne quitte jamais le serveur : le cookie de session ne contient
-que son empreinte SHA-256. Conséquence utile — **changer le mot de passe
+que son empreinte SHA-256. Conséquence utile : **changer le mot de passe
 déconnecte immédiatement toutes les sessions ouvertes**, sans rien à purger.
 
 Le contrôle est fait dans `proxy.ts`, en amont du rendu : une route ajoutée plus
@@ -143,7 +165,7 @@ app/page.tsx        Écran unique, rendu côté serveur
 proxy.ts            Protection par mot de passe (ex-middleware, renommé en Next 16)
 lib/chariow.ts      Client API Chariow + normalisation des ventes
 lib/meta.ts         Client Marketing API + conversion des devises
-lib/attribution.ts  Jointure (jour × produit) — le cœur, testé isolément
+lib/attribution.ts  Jointure (jour × produit) : le cœur, testé isolément
 lib/money.ts        Parité XOF/EUR et formatage
 lib/report.ts       Orchestration, tolérance aux pannes partielles
 components/         Interface
