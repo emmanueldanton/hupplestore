@@ -1,3 +1,4 @@
+import { logout } from "@/app/login/actions";
 import { Amount } from "./Amount";
 import { TrendBadge } from "./TrendBadge";
 import { PeriodSelector } from "./PeriodSelector";
@@ -58,7 +59,17 @@ export function Hero({
             HUPPLE STORE
           </span>
         </div>
-        <PeriodSelector active={period} />
+        <div className="flex items-center gap-2">
+          <PeriodSelector active={period} />
+          <form action={logout}>
+            <button
+              type="submit"
+              className="rounded-[var(--radius-pill)] bg-black/25 px-3.5 py-2 text-[0.8rem] font-semibold text-white/70 transition-colors hover:bg-black/35 hover:text-white"
+            >
+              Quitter
+            </button>
+          </form>
+        </div>
       </div>
 
       <div className="mt-9 flex flex-col gap-9 lg:flex-row lg:items-end lg:justify-between">

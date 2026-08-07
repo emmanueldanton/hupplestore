@@ -116,11 +116,23 @@ Conséquence pratique : **ne juge jamais une campagne sur moins de 7 jours.**
 
 1. Pousser le dépôt sur GitHub, puis l'importer dans Vercel.
 2. Reporter les variables d'environnement du fichier `.env.example`.
-3. **Définir `DASHBOARD_PASSWORD`.** Sans lui, le site refuse de démarrer en
-   production plutôt que d'exposer publiquement ton chiffre d'affaires.
+3. **Définir `DASHBOARD_EMAIL` et `DASHBOARD_PASSWORD`.** Sans eux, le site
+   refuse de démarrer en production plutôt que d'exposer publiquement ton
+   chiffre d'affaires.
 
-L'accès est protégé par authentification HTTP Basic : le navigateur demande un
-identifiant (quelconque) et le mot de passe défini.
+## Accès
+
+Page de connexion à `/login` : adresse e-mail, mot de passe, et une case
+« rester connecté » qui prolonge la session à 30 jours. Le formulaire porte les
+attributs `autocomplete` attendus, donc le gestionnaire de mots de passe du
+navigateur propose d'enregistrer les identifiants.
+
+Le mot de passe ne quitte jamais le serveur : le cookie de session ne contient
+que son empreinte SHA-256. Conséquence utile — **changer le mot de passe
+déconnecte immédiatement toutes les sessions ouvertes**, sans rien à purger.
+
+Le contrôle est fait dans `proxy.ts`, en amont du rendu : une route ajoutée plus
+tard est protégée d'office, sans intervention.
 
 ---
 
