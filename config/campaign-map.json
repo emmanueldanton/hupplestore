@@ -1,0 +1,29 @@
+{
+  "_lisez_moi": [
+    "Table de correspondance : campagne Facebook -> produit(s) HUPPLE STORE.",
+    "La clé est le NOM EXACT de la campagne dans le gestionnaire de publicités",
+    "(la casse et les espaces de bord sont ignorés), ou son identifiant numérique.",
+    "La valeur est un identifiant produit, ou une liste si la campagne en pousse plusieurs.",
+    "Toute campagne absente de cette table apparaît en 'Non mappée' dans le tableau de bord :",
+    "sa dépense est comptée, mais aucun revenu ne lui est attribué.",
+    "Cette clé _lisez_moi est ignorée par le code."
+  ],
+
+  "_produits_disponibles": {
+    "prd_umqgm8su": "Le Pack Orateur Complet (bundle) — 4 999 F",
+    "prd_xv18ufmo": "Mon Enfant Ose Parler — 2 200 F",
+    "prd_5qby7y": "La Science de la Richesse + MyFinanx — 4 900 F",
+    "prd_0m2vfj": "L'Art Oratoire : Parlez avec Autorité — 3 900 F",
+    "prd_gcozed": "Lancer et Monétiser un Influenceur IA — 4 900 F",
+    "prd_qgn2mj": "92 Techniques pour Engager la Conversation — 3 900 F",
+    "prd_tdrx0z": "Raviver votre relation amoureuse — 1 900 F",
+    "prd_4qpa9s": "Deviens l'Orateur qu'on Écoute — 3 900 F"
+  },
+
+  "mapping": {
+    "Pack Orateur - Acquisition": "prd_umqgm8su",
+    "Science de la Richesse - Broad": "prd_5qby7y",
+    "Relation Amoureuse - Retargeting": "prd_tdrx0z",
+    "Multi-produits - Développement personnel": ["prd_0m2vfj", "prd_4qpa9s"]
+  }
+}

@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/**
+ * Système de design — inspiré du « Banking Dashboard » de Nixtio.
+ *
+ * Traits repris : fond gris chaud, hero en dégradé orange saturé à grand rayon,
+ * cartes blanches très arrondies posées dessus, typographie grotesque serrée,
+ * grands nombres à deux tons (chiffre en noir, unité en gris), micro-badges de
+ * tendance, barres fines avec le groupe actif en noir.
+ *
+ * Toutes les couleurs sont définies ici : reskiner le tableau de bord se fait
+ * dans ce seul bloc.
+ */
+
+:root {
+  --bg: #efeeea;
+  --surface: #ffffff;
+  --surface-sunken: #f6f5f2;
+
+  --ink: #14120f;
+  --ink-soft: #56514a;
+  --ink-muted: #97918a;
+
+  --hairline: rgba(20, 18, 15, 0.08);
+
+  --brand-from: #ff8a3d;
+  --brand-mid: #f4562a;
+  --brand-to: #d93a19;
+
+  --positive: #17864a;
+  --positive-soft: #e6f4ec;
+  --negative: #d1402f;
+  --negative-soft: #fbeae7;
+
+  --radius-hero: 32px;
+  --radius-card: 22px;
+  --radius-pill: 999px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-hairline: var(--hairline);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Primitives ─────────────────────────────────────────────────────────── */
+
+.hero-gradient {
+  background:
+    radial-gradient(
+      120% 140% at 82% 18%,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0) 55%
+    ),
+    linear-gradient(
+      118deg,
+      var(--brand-from) 0%,
+      var(--brand-mid) 46%,
+      var(--brand-to) 100%
+    );
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--hairline);
+}
+
+/* Verre dépoli du panneau « solde » posé sur le dégradé. */
+.glass {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-radius: var(--radius-card);
+}
+
+/* Grands nombres : chiffres très serrés, comme dans la référence. */
+.numeral {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Le tableau des campagnes déborde sur mobile : il défile seul, jamais la page. */
+.scroll-x {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
