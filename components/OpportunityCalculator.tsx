@@ -102,7 +102,7 @@ export function OpportunityCalculator({
               {formatPercent(verdict.requiredCvr, false)}
             </span>
           </Ligne>
-          <Ligne label="Ta conversion actuelle">
+          <Ligne label="Ta conversion publicitaire">
             <span className="tabular text-[0.95rem] font-semibold text-ink">
               {formatPercent(economics.cvr, false)}
             </span>

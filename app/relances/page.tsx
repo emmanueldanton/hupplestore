@@ -48,7 +48,7 @@ export default async function RelancesPage({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <PeriodSelector active={period} windowDays={0} />
+              <PeriodSelector active={period} windowDays={0} basePath="/relances" />
               <LogoutButton />
             </div>
           </div>

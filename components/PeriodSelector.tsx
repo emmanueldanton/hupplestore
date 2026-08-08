@@ -5,13 +5,20 @@ import { PERIODS, type PeriodKey } from "@/lib/period";
  * Sélecteur de période sous forme de pilule. Ce sont de vrais liens : la page
  * reste entièrement rendue côté serveur, sans JavaScript client, et chaque
  * période a son URL partageable.
+ *
+ * `basePath` est obligatoire, et non pas facultatif avec « / » par défaut :
+ * un défaut silencieux avait renvoyé l'utilisateur du Tunnel vers la
+ * Rentabilité à chaque changement de période. Le rendre explicite force
+ * chaque page à déclarer où elle se trouve.
  */
 export function PeriodSelector({
   active,
   windowDays,
+  basePath,
 }: {
   active: PeriodKey;
   windowDays: number;
+  basePath: "/" | "/tunnel" | "/relances" | "/veille";
 }) {
   return (
     <nav
@@ -23,7 +30,7 @@ export function PeriodSelector({
         return (
           <Link
             key={key}
-            href={`/?period=${key}&window=${windowDays}`}
+            href={`${basePath}?period=${key}&window=${windowDays}`}
             aria-current={isActive ? "page" : undefined}
             className={`rounded-[var(--radius-pill)] px-3 py-1.5 text-[0.8rem] font-semibold transition-colors sm:px-3.5 ${
               isActive

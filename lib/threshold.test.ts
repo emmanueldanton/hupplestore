@@ -1,32 +1,47 @@
 import { describe, expect, it } from "vitest";
-import { computeUnitEconomics, judgePrice } from "./threshold";
-import type { Kpis } from "./types";
+import { computeUnitEconomics, judgePrice, type EconomicsInput } from "./threshold";
 
-/** Chiffres réels de la boutique sur douze mois. */
-const REEL: Kpis = {
+/**
+ * Chiffres réels de la boutique sur douze mois.
+ * 239 ventes au total, dont 91 qu'aucune campagne ne revendique.
+ */
+const REEL: EconomicsInput = {
   spendXof: 722899,
-  grossXof: 793334,
-  netXof: 674334,
-  marginXof: -48565,
-  roas: 0.93,
-  sales: 239,
-  averageNetXof: 2821,
-  impressions: 0,
   clicks: 16378,
+  attributedSales: 148,
+  totalSales: 239,
 };
 
 describe("computeUnitEconomics", () => {
-  it("retrouve le coût par clic et la conversion constatés", () => {
-    const e = computeUnitEconomics(REEL, 0.85);
-    expect(e.cpcXof).toBeCloseTo(44.1, 1);
-    expect(e.cvr).toBeCloseTo(0.0146, 4);
+  it("retrouve le coût par clic constaté", () => {
+    expect(computeUnitEconomics(REEL, 0.85).cpcXof).toBeCloseTo(44.1, 1);
   });
 
-  it("établit le prix plancher de la boutique", () => {
-    // 44,1 / (0,0146 x 0,85) = environ 3 558 F.
+  it("ne crédite la publicité que des ventes qu'elle a produites", () => {
     const e = computeUnitEconomics(REEL, 0.85);
-    expect(e.floorXof).toBeGreaterThan(3400);
-    expect(e.floorXof).toBeLessThan(3700);
+    // 148 / 16 378 et non 239 / 16 378.
+    expect(e.cvr).toBeCloseTo(0.00904, 5);
+    expect(e.blendedCvr).toBeCloseTo(0.01459, 5);
+  });
+
+  it("établit le prix plancher sur la conversion publicitaire", () => {
+    // 44,1 / (0,00904 x 0,85) = environ 5 750 F.
+    const e = computeUnitEconomics(REEL, 0.85);
+    expect(e.floorXof).toBeGreaterThan(5500);
+    expect(e.floorXof).toBeLessThan(6000);
+  });
+
+  it("ne se laisse pas abaisser par les ventes organiques", () => {
+    // Le piège corrigé : compter les 239 ventes ramenait le plancher à
+    // 3 500 F, et validait des produits qu'un clic payant ne rembourse pas.
+    const honnete = computeUnitEconomics(REEL, 0.85);
+    const gonfle = computeUnitEconomics(
+      { ...REEL, attributedSales: REEL.totalSales },
+      0.85,
+    );
+
+    expect(gonfle.floorXof).toBeLessThan(honnete.floorXof!);
+    expect(honnete.floorXof! / gonfle.floorXof!).toBeGreaterThan(1.5);
   });
 
   it("place le confort au double du plancher", () => {
@@ -40,39 +55,43 @@ describe("computeUnitEconomics", () => {
     expect(e.cpcXof).toBeNull();
   });
 
-  it("renonce également sans aucune vente", () => {
-    expect(computeUnitEconomics({ ...REEL, sales: 0 }, 0.85).floorXof).toBeNull();
+  it("renonce quand aucune vente n'est attribuable, même s'il y en a eu", () => {
+    // Cas réel possible : des ventes organiques, mais aucune campagne mappée.
+    const e = computeUnitEconomics({ ...REEL, attributedSales: 0 }, 0.85);
+    expect(e.floorXof).toBeNull();
+    // La conversion globale reste consultable, à titre d'information.
+    expect(e.blendedCvr).toBeCloseTo(0.01459, 5);
   });
 });
 
 describe("judgePrice", () => {
   const e = computeUnitEconomics(REEL, 0.85);
 
-  it("condamne les prix sous le plancher", () => {
-    // Les deux produits réellement lancés à ces prix ont fait 1 et 0 vente.
+  it("condamne les prix très en dessous du plancher", () => {
     expect(judgePrice(1900, e).viability).toBe("sous_le_plancher");
     expect(judgePrice(2200, e).viability).toBe("sous_le_plancher");
   });
 
-  it("qualifie de limite le prix du produit phare", () => {
-    // 3 900 F donne un ROAS de 1,10 : rentable, sans marge de sécurité.
+  it("condamne désormais le prix du produit phare", () => {
+    // 3 900 F paraissait « limite » tant que les ventes organiques
+    // gonflaient la conversion. Sur la seule performance publicitaire, ce
+    // prix ne rembourse pas le clic, ce que confirme le ROAS réel de 0,93.
     const v = judgePrice(3900, e);
-    expect(v.viability).toBe("limite");
-    expect(v.expectedRoas).toBeGreaterThan(1);
-    expect(v.expectedRoas).toBeLessThan(1.3);
+    expect(v.viability).toBe("sous_le_plancher");
+    expect(v.expectedRoas).toBeLessThan(1);
   });
 
-  it("valide un prix confortable", () => {
-    const v = judgePrice(6900, e);
+  it("valide un prix nettement au dessus du plancher", () => {
+    const v = judgePrice(9900, e);
     expect(v.viability).toBe("viable");
-    expect(v.expectedRoas).toBeGreaterThan(1.8);
+    expect(v.expectedRoas).toBeGreaterThan(1.5);
   });
 
   it("calcule la conversion exigée à un prix donné", () => {
-    // A 4 999 F, il faut convertir environ 1 %.
-    const v = judgePrice(4999, e);
-    expect(v.requiredCvr! * 100).toBeGreaterThan(0.9);
-    expect(v.requiredCvr! * 100).toBeLessThan(1.15);
+    // A 9 900 F, il faut convertir environ 0,52 %.
+    const v = judgePrice(9900, e);
+    expect(v.requiredCvr! * 100).toBeGreaterThan(0.45);
+    expect(v.requiredCvr! * 100).toBeLessThan(0.6);
   });
 
   it("déduit les prélèvements du net par vente", () => {
@@ -80,8 +99,7 @@ describe("judgePrice", () => {
   });
 
   it("bascule exactement au plancher", () => {
-    const v = judgePrice(e.floorXof!, e);
-    expect(v.expectedRoas).toBeCloseTo(1, 6);
+    expect(judgePrice(e.floorXof!, e).expectedRoas).toBeCloseTo(1, 6);
   });
 
   it("n'invente aucun verdict sans économie mesurable", () => {

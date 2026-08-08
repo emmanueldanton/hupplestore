@@ -40,7 +40,7 @@ export default async function TunnelPage({ searchParams }: PageProps<"/tunnel">)
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <PeriodSelector active={period} windowDays={0} />
+            <PeriodSelector active={period} windowDays={0} basePath="/tunnel" />
             <LogoutButton />
 
           </div>

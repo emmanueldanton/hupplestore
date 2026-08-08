@@ -61,7 +61,11 @@ export function Hero({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <PeriodSelector active={period} windowDays={report.attributionWindowDays} />
+          <PeriodSelector
+            active={period}
+            windowDays={report.attributionWindowDays}
+            basePath="/"
+          />
           <LogoutButton />
 
         </div>

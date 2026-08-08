@@ -9,7 +9,7 @@ import { PeriodSelector } from "@/components/PeriodSelector";
 import { formatPercent, formatRoas, formatXof } from "@/lib/money";
 import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
 import { loadDashboard } from "@/lib/report";
-import { computeUnitEconomics, judgePrice } from "@/lib/threshold";
+import { judgePrice, unitEconomicsFromReport } from "@/lib/threshold";
 
 export const metadata = {
   title: "Veille · HUPPLE STORE",
@@ -37,7 +37,7 @@ export default async function VeillePage({ searchParams }: PageProps<"/veille">)
   const period = isPeriodKey(raw) ? raw : DEFAULT_PERIOD;
 
   const { current, fatal } = await loadDashboard(period);
-  const eco = computeUnitEconomics(current.kpis);
+  const eco = unitEconomicsFromReport(current);
 
   return (
     <>
@@ -51,7 +51,7 @@ export default async function VeillePage({ searchParams }: PageProps<"/veille">)
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <PeriodSelector active={period} windowDays={0} />
+              <PeriodSelector active={period} windowDays={0} basePath="/veille" />
               <LogoutButton />
             </div>
           </div>
@@ -69,8 +69,19 @@ export default async function VeillePage({ searchParams }: PageProps<"/veille">)
               <p className="mt-3 text-[0.9rem] leading-relaxed text-white/75">
                 {eco.floorXof === null
                   ? "Sans dépense publicitaire ni vente sur la période, le coût par clic ne peut pas être établi."
-                  : `À ${formatXof(eco.cpcXof ?? 0)} le clic et ${formatPercent(eco.cvr, false)} de conversion, tout produit vendu en dessous perd de l'argent, quelle que soit sa qualité.`}
+                  : `À ${formatXof(eco.cpcXof ?? 0)} le clic et ${formatPercent(eco.cvr, false)} de conversion publicitaire, tout produit vendu en dessous perd de l'argent, quelle que soit sa qualité.`}
               </p>
+
+              {eco.cvr !== null && eco.blendedCvr !== null && (
+                <p className="mt-3 text-[0.78rem] leading-relaxed text-white/55">
+                  Ce taux ne retient que les {eco.attributedSales} ventes
+                  qu&apos;une campagne peut revendiquer, sur {eco.totalSales} au
+                  total. Compter les ventes organiques porterait la conversion à{" "}
+                  {formatPercent(eco.blendedCvr, false)} et abaisserait
+                  artificiellement le plancher : la publicité serait créditée de
+                  ventes qu&apos;elle n&apos;a pas produites.
+                </p>
+              )}
             </div>
 
             <div className="glass w-full max-w-sm p-6">
