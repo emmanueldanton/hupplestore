@@ -11,7 +11,7 @@ import type { PeriodKey } from "@/lib/period";
  * Sur grand écran elle disparaît au profit des onglets de l'en-tête, la
  * distance à parcourir avec une souris n'ayant pas la même importance.
  */
-export type Tab = "rentabilite" | "tunnel" | "relances";
+export type Tab = "rentabilite" | "tunnel" | "relances" | "veille";
 
 const TABS: {
   key: Tab;
@@ -45,6 +45,14 @@ const TABS: {
     path: "/relances",
     icon: (
       <path d="M12 3a6 6 0 0 0-6 6v3.6L4.4 16h15.2L18 12.6V9a6 6 0 0 0-6-6zm0 18a2.6 2.6 0 0 0 2.5-2h-5A2.6 2.6 0 0 0 12 21z" />
+    ),
+  },
+  {
+    key: "veille",
+    label: "Veille",
+    path: "/veille",
+    icon: (
+      <path d="M10.5 3a7.5 7.5 0 1 0 4.55 13.46l4.24 4.25 1.42-1.42-4.25-4.24A7.5 7.5 0 0 0 10.5 3zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z" />
     ),
   },
 ];
