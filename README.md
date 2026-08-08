@@ -85,6 +85,21 @@ bord signale explicitement qu'il s'agit d'un calcul et non d'un constat.
 Si tu changes de plan tarifaire, vérifie le taux sur un relevé réel et ajuste la
 variable : c'est le seul chiffre du système qui ne peut pas se valider tout seul.
 
+### Le filtrage par période
+
+**L'API Chariow ignore `start_date` et `end_date`.** Vérifié en production :
+une fenêtre d'une semaine, d'un mois, ou aucune fenêtre du tout renvoient
+toutes les mêmes 522 ventes.
+
+Le filtrage est donc fait dans l'application, après réception. Les paramètres
+restent envoyés au cas où Chariow les implémenterait un jour, mais la justesse
+des chiffres n'en dépend pas.
+
+Sans ce filtrage local, chaque période afficherait le même chiffre d'affaires,
+comparé à des dépenses publicitaires, elles, correctement bornées. Le ROAS
+affiché serait faux dans des proportions considérables : sur cette boutique,
+6,25 au lieu de 1,03.
+
 ### Le périmètre
 
 Sont retenues les ventes `completed` **et `settled`**, avec un montant supérieur

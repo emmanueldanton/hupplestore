@@ -48,11 +48,11 @@ export async function loadDashboard(period: PeriodKey): Promise<DashboardData> {
     );
   }
 
-  // Les deux périodes et les deux sources sont indépendantes : on les
-  // interroge en parallèle et on tolère une défaillance partielle.
-  const [salesNow, salesBefore, spendNow, spendBefore] = await Promise.allSettled([
-    fetchSales(current.from, current.to, config.chariowApiKey),
-    fetchSales(previous.from, previous.to, config.chariowApiKey),
+  // Un seul appel Chariow couvrant les deux périodes, découpé ensuite.
+  // L'API ignorant les filtres de date, elle renvoie de toute façon
+  // l'historique complet : deux appels seraient deux fois le même transfert.
+  const [salesAll, spendNow, spendBefore] = await Promise.allSettled([
+    fetchSales(previous.from, current.to, config.chariowApiKey),
     fetchAdSpend(current.from, current.to, {
       accessToken: config.metaAccessToken,
       adAccountId: config.metaAdAccountId,
@@ -68,12 +68,12 @@ export async function loadDashboard(period: PeriodKey): Promise<DashboardData> {
   const messageOf = (reason: unknown) =>
     reason instanceof Error ? reason.message : String(reason);
 
-  if (salesNow.status === "rejected") {
+  if (salesAll.status === "rejected") {
     return {
       current: emptyReport(current.from, current.to),
       previous: emptyReport(previous.from, previous.to),
       warnings,
-      fatal: messageOf(salesNow.reason),
+      fatal: messageOf(salesAll.reason),
     };
   }
 
@@ -83,9 +83,12 @@ export async function loadDashboard(period: PeriodKey): Promise<DashboardData> {
     );
   }
 
-  const salesCurrent: SaleRecord[] = salesNow.value;
-  const salesPrevious: SaleRecord[] =
-    salesBefore.status === "fulfilled" ? salesBefore.value : [];
+  const salesCurrent: SaleRecord[] = salesAll.value.filter(
+    (sale) => sale.date >= current.from,
+  );
+  const salesPrevious: SaleRecord[] = salesAll.value.filter(
+    (sale) => sale.date < current.from,
+  );
 
   const spendCurrent: AdSpendRecord[] =
     spendNow.status === "fulfilled" ? spendNow.value.records : [];

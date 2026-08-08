@@ -144,10 +144,21 @@ function normalize(sale: ChariowSale, netRate: number): SaleRecord | null {
 }
 
 /**
- * Récupère toutes les ventes de la période, en suivant la pagination cursor.
+ * Récupère les ventes de la période, en suivant la pagination cursor.
  *
- * `end_date` est inclusif côté Chariow. Le garde-fou à 50 pages évite qu'une
- * pagination cassée ne boucle indéfiniment sur un serveur de production.
+ * ATTENTION : l'API Chariow **ignore silencieusement** `start_date` et
+ * `end_date`. Vérifié en production, trois fenêtres différentes (une semaine,
+ * un mois, aucune) renvoient toutes les 522 mêmes ventes.
+ *
+ * Le filtrage est donc fait ici, après réception. Les paramètres restent
+ * envoyés au cas où Chariow les implémenterait un jour : ils seraient alors une
+ * optimisation, jamais une condition de justesse.
+ *
+ * Conséquence : chaque appel rapatrie tout l'historique. Acceptable à ce volume
+ * (six pages), à revoir au-delà de quelques milliers de ventes.
+ *
+ * Le garde-fou à 50 pages évite qu'une pagination cassée ne boucle
+ * indéfiniment sur un serveur de production.
  */
 export async function fetchSales(
   from: string,
@@ -194,7 +205,11 @@ export async function fetchSales(
 
     for (const sale of payload.data ?? []) {
       const record = normalize(sale, netRate);
-      if (record) sales.push(record);
+      // Comparaison lexicographique sur des dates ISO : correcte, et sans
+      // conversion en objet Date qui réintroduirait un fuseau horaire.
+      if (record && record.date >= from && record.date <= to) {
+        sales.push(record);
+      }
     }
 
     const hasMore =
