@@ -6,7 +6,13 @@ import { PERIODS, type PeriodKey } from "@/lib/period";
  * reste entièrement rendue côté serveur, sans JavaScript client, et chaque
  * période a son URL partageable.
  */
-export function PeriodSelector({ active }: { active: PeriodKey }) {
+export function PeriodSelector({
+  active,
+  windowDays,
+}: {
+  active: PeriodKey;
+  windowDays: number;
+}) {
   return (
     <nav
       aria-label="Période d'analyse"
@@ -17,7 +23,7 @@ export function PeriodSelector({ active }: { active: PeriodKey }) {
         return (
           <Link
             key={key}
-            href={`/?period=${key}`}
+            href={`/?period=${key}&window=${windowDays}`}
             aria-current={isActive ? "page" : undefined}
             className={`rounded-[var(--radius-pill)] px-3.5 py-1.5 text-[0.8rem] font-semibold transition-colors ${
               isActive

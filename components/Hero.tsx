@@ -60,7 +60,7 @@ export function Hero({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <PeriodSelector active={period} />
+          <PeriodSelector active={period} windowDays={report.attributionWindowDays} />
           <form action={logout}>
             <button
               type="submit"

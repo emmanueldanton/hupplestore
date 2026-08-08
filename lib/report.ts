@@ -3,11 +3,27 @@ import { fetchSales, getNetRate } from "./chariow";
 import { fetchAdSpend } from "./meta";
 import { loadCampaignMap, loadConfig, ConfigError } from "./config";
 import { resolvePeriod, type PeriodKey } from "./period";
-import type { AdSpendRecord, ProfitabilityReport, SaleRecord } from "./types";
+import type {
+  AdSpendRecord,
+  ProfitabilityReport,
+  SaleRecord,
+  SensitivityRow,
+} from "./types";
+
+/**
+ * Fenêtres d'attribution comparées systématiquement.
+ *
+ * Elles ne servent pas à choisir « la bonne » : aucune ne l'est. Elles servent
+ * à savoir si la conclusion tient quelle que soit l'hypothèse. Une campagne
+ * dont le verdict change entre 0 et 7 jours ne doit pas fonder une décision.
+ */
+export const SENSITIVITY_WINDOWS = [0, 1, 3, 7] as const;
 
 export interface DashboardData {
   current: ProfitabilityReport;
   previous: ProfitabilityReport;
+  /** Le même calcul répété à plusieurs fenêtres, pour éprouver sa robustesse. */
+  sensitivity: SensitivityRow[];
   /**
    * Problèmes non bloquants. Une panne côté Meta ne doit pas masquer les
    * ventes : on affiche ce qu'on a, en disant clairement ce qui manque.
@@ -21,7 +37,53 @@ function emptyReport(from: string, to: string): ProfitabilityReport {
   return buildReport({ from, to, sales: [], spend: [], campaignMap: {} });
 }
 
-export async function loadDashboard(period: PeriodKey): Promise<DashboardData> {
+/**
+ * Rejoue le calcul à chaque fenêtre et compare les verdicts obtenus.
+ * Une campagne est dite stable si son verdict ne bouge pas d'une fenêtre à
+ * l'autre : elle seule autorise une décision.
+ */
+function buildSensitivity(params: {
+  from: string;
+  to: string;
+  sales: SaleRecord[];
+  spend: AdSpendRecord[];
+  campaignMap: Parameters<typeof buildReport>[0]["campaignMap"];
+}): SensitivityRow[] {
+  const rows = new Map<string, SensitivityRow>();
+
+  for (const windowDays of SENSITIVITY_WINDOWS) {
+    const report = buildReport({ ...params, attributionWindowDays: windowDays });
+
+    for (const campaign of report.campaigns) {
+      let row = rows.get(campaign.campaignId);
+      if (!row) {
+        row = {
+          campaignId: campaign.campaignId,
+          campaignName: campaign.campaignName,
+          spendXof: campaign.spendXof,
+          roasByWindow: {},
+          verdictByWindow: {},
+          stable: true,
+        };
+        rows.set(campaign.campaignId, row);
+      }
+      row.roasByWindow[windowDays] = campaign.roas;
+      row.verdictByWindow[windowDays] = campaign.confidence.verdict;
+    }
+  }
+
+  for (const row of rows.values()) {
+    const verdicts = new Set(Object.values(row.verdictByWindow));
+    row.stable = verdicts.size <= 1;
+  }
+
+  return [...rows.values()].sort((a, b) => b.spendXof - a.spendXof);
+}
+
+export async function loadDashboard(
+  period: PeriodKey,
+  attributionWindowDays = 0,
+): Promise<DashboardData> {
   const { current, previous } = resolvePeriod(period);
   const warnings: string[] = [];
 
@@ -36,6 +98,7 @@ export async function loadDashboard(period: PeriodKey): Promise<DashboardData> {
     return {
       current: emptyReport(current.from, current.to),
       previous: emptyReport(previous.from, previous.to),
+      sensitivity: [],
       warnings: [],
       fatal: message,
     };
@@ -72,6 +135,7 @@ export async function loadDashboard(period: PeriodKey): Promise<DashboardData> {
     return {
       current: emptyReport(current.from, current.to),
       previous: emptyReport(previous.from, previous.to),
+      sensitivity: [],
       warnings,
       fatal: messageOf(salesAll.reason),
     };
@@ -105,7 +169,26 @@ export async function loadDashboard(period: PeriodKey): Promise<DashboardData> {
     spend: spendCurrent,
     campaignMap,
     adAccountCurrency: currency,
+    attributionWindowDays,
   });
+
+  const sensitivity = buildSensitivity({
+    from: current.from,
+    to: current.to,
+    sales: salesCurrent,
+    spend: spendCurrent,
+    campaignMap,
+  });
+
+  const instables = sensitivity.filter((row) => !row.stable && row.spendXof > 0);
+  if (instables.length > 0) {
+    warnings.push(
+      `Le verdict de ${instables.length} campagne(s) change selon la fenêtre d'attribution retenue : ${instables
+        .slice(0, 4)
+        .map((r) => r.campaignName)
+        .join(", ")}. Leur résultat dépend d'une hypothèse, pas des données : ne fonde aucune décision dessus.`,
+    );
+  }
 
   if (report.unmappedCampaignNames.length > 0) {
     warnings.push(
@@ -129,7 +212,9 @@ export async function loadDashboard(period: PeriodKey): Promise<DashboardData> {
       spend: spendPrevious,
       campaignMap,
       adAccountCurrency: currency,
+      attributionWindowDays,
     }),
+    sensitivity,
     warnings,
     fatal: null,
   };

@@ -1,3 +1,5 @@
+import type { CampaignConfidence } from "./decision";
+
 /**
  * Modèle de données du tableau de bord de rentabilité.
  *
@@ -60,6 +62,11 @@ export interface CampaignPerformance {
   cpaXof: number | null;
   /** Net moyen par vente : au-delà, chaque acquisition te coûte de l'argent. */
   breakEvenCpaXof: number | null;
+  /**
+   * Qualification statistique du résultat. Sans elle, un ROAS de 0 sur 41 clics
+   * se lit comme un échec avéré alors qu'il ne prouve rien.
+   */
+  confidence: CampaignConfidence;
 }
 
 /** Performance agrégée d'un produit sur la période. */
@@ -123,6 +130,25 @@ export interface ProfitabilityReport {
   hasEstimatedNet: boolean;
   /** Devise du compte publicitaire Meta, pour information. */
   adAccountCurrency: string | null;
+  /** Nombre de jours pendant lesquels une dépense peut revendiquer une vente. */
+  attributionWindowDays: number;
+  /** Net moyen par vente sur la période, base de tous les seuils d'équilibre. */
+  netPerSaleXof: number;
+}
+
+/** Comparaison d'un même rapport à plusieurs fenêtres d'attribution. */
+export interface SensitivityRow {
+  campaignId: string;
+  campaignName: string;
+  spendXof: number;
+  /** ROAS obtenu pour chaque fenêtre testée, indexé par nombre de jours. */
+  roasByWindow: Record<number, number | null>;
+  verdictByWindow: Record<number, string>;
+  /**
+   * true si le verdict ne change pas d'une fenêtre à l'autre. Une campagne
+   * instable ne doit pas servir de base à une décision.
+   */
+  stable: boolean;
 }
 
 /** Comparaison avec la période précédente de même durée. */

@@ -1,3 +1,4 @@
+import { assess, UNKNOWN_CONFIDENCE } from "./decision";
 import type {
   AdSpendRecord,
   CampaignPerformance,
@@ -79,9 +80,17 @@ export function buildReport(params: {
   spend: AdSpendRecord[];
   campaignMap: CampaignMap;
   adAccountCurrency?: string | null;
+  /**
+   * Nombre de jours pendant lesquels une dépense peut revendiquer une vente.
+   * 0 signifie le jour même uniquement. Voir la note sur la sensibilité dans
+   * la documentation : si le classement des campagnes change selon cette
+   * valeur, aucune décision ne doit s'appuyer dessus.
+   */
+  attributionWindowDays?: number;
 }): ProfitabilityReport {
   const { from, to, sales, spend } = params;
   const map = normalizeMap(params.campaignMap);
+  const windowDays = Math.max(0, params.attributionWindowDays ?? 0);
 
   // ── Index des dépenses : jour -> campagne -> ligne agrégée ───────────────
   const spendByDay = new Map<string, Map<string, AdSpendRecord>>();
@@ -151,34 +160,41 @@ export function buildReport(params: {
     }
     addTo(product, sale);
 
-    // Campagnes qui poussaient ce produit ce jour-là, avec une dépense réelle.
-    const dayCampaigns = spendByDay.get(sale.date);
-    const claimants = dayCampaigns
-      ? [...dayCampaigns.values()].filter(
-          (record) =>
-            record.spendXof > 0 &&
-            (campaignInfo.get(record.campaignId)?.products ?? []).includes(
-              sale.productId,
-            ),
-        )
-      : [];
+    // Campagnes qui poussaient ce produit dans la fenêtre précédant la vente,
+    // avec une dépense réelle. Le poids d'une campagne est la somme de sa
+    // dépense sur toute la fenêtre.
+    const weights = new Map<string, number>();
+    for (let offset = 0; offset <= windowDays; offset += 1) {
+      const day = shiftDay(sale.date, -offset);
+      const dayCampaigns = spendByDay.get(day);
+      if (!dayCampaigns) continue;
 
-    if (claimants.length === 0) {
+      for (const record of dayCampaigns.values()) {
+        if (record.spendXof <= 0) continue;
+        const products = campaignInfo.get(record.campaignId)?.products ?? [];
+        if (!products.includes(sale.productId)) continue;
+        weights.set(
+          record.campaignId,
+          (weights.get(record.campaignId) ?? 0) + record.spendXof,
+        );
+      }
+    }
+
+    if (weights.size === 0) {
       unattributed.sales += 1;
       unattributed.grossXof += sale.grossXof;
       unattributed.netXof += sale.netXof;
       continue;
     }
 
-    const totalSpend = claimants.reduce((sum, r) => sum + r.spendXof, 0);
-    for (const claimant of claimants) {
-      const share = claimant.spendXof / totalSpend;
-      let bucket = perCampaign.get(claimant.campaignId);
+    const totalWeight = [...weights.values()].reduce((sum, w) => sum + w, 0);
+    for (const [campaignId, weight] of weights) {
+      let bucket = perCampaign.get(campaignId);
       if (!bucket) {
         bucket = emptyBucket();
-        perCampaign.set(claimant.campaignId, bucket);
+        perCampaign.set(campaignId, bucket);
       }
-      addTo(bucket, sale, share);
+      addTo(bucket, sale, weight / totalWeight);
     }
   }
 
@@ -201,6 +217,47 @@ export function buildReport(params: {
     }
   }
 
+  // Panier net de référence, utilisé pour convertir un taux de conversion en
+  // revenu. On privilégie le panier des produits que la campagne pousse
+  // réellement : un bundle à 4 999 F et un guide à 1 900 F n'ont pas le même
+  // seuil de rentabilité, et une moyenne globale les confondrait.
+  const globalNetPerSale =
+    sales.length > 0
+      ? sales.reduce((sum, s) => sum + s.netXof, 0) / sales.length
+      : 0;
+
+  const netPerProduct = new Map<string, number>();
+  for (const [productId, bucket] of perProduct) {
+    if (bucket.sales > 0) {
+      netPerProduct.set(productId, bucket.netXof / bucket.sales);
+    }
+  }
+
+  /**
+   * Panier de référence d'une campagne, par ordre de préférence :
+   *
+   *   1. son propre panier réalisé, dès qu'elle a assez de ventes ;
+   *   2. le panier moyen des produits qu'elle pousse ;
+   *   3. le panier moyen de la boutique.
+   *
+   * Le premier niveau n'est pas un raffinement, c'est une condition de
+   * cohérence. Sans lui, une campagne peut afficher une marge positive et une
+   * probabilité de rentabilité faible, parce que le seuil d'équilibre serait
+   * calculé sur un panier que cette campagne ne réalise pas. Deux affirmations
+   * contradictoires dans la même ligne détruisent la confiance dans l'outil.
+   */
+  const referenceNet = (productIds: string[], revenue: Bucket): number => {
+    if (revenue.sales >= 3 && revenue.netXof > 0) {
+      return revenue.netXof / revenue.sales;
+    }
+
+    const known = productIds
+      .map((id) => netPerProduct.get(id))
+      .filter((value): value is number => typeof value === "number");
+    if (known.length === 0) return globalNetPerSale;
+    return known.reduce((sum, v) => sum + v, 0) / known.length;
+  };
+
   const campaigns: CampaignPerformance[] = [...campaignInfo.entries()].map(
     ([campaignId, info]) => {
       const totals = spendTotals.get(campaignId) ?? {
@@ -211,6 +268,17 @@ export function buildReport(params: {
       const revenue = perCampaign.get(campaignId) ?? emptyBucket();
 
       return {
+        // Une campagne non mappée ne peut recevoir aucun revenu par
+        // construction : lui attribuer une probabilité de rentabilité serait
+        // un artefact du calcul, pas une information.
+        confidence: info.isMapped
+          ? assess({
+              clicks: totals.clicks,
+              conversions: revenue.sales,
+              spendXof: totals.spendXof,
+              netPerSaleXof: referenceNet(info.products, revenue),
+            })
+          : UNKNOWN_CONFIDENCE,
         campaignId,
         campaignName: info.name,
         productIds: info.products,
@@ -308,7 +376,16 @@ export function buildReport(params: {
       .map((c) => c.campaignName),
     hasEstimatedNet: sales.some((s) => s.netIsEstimated),
     adAccountCurrency: params.adAccountCurrency ?? null,
+    attributionWindowDays: windowDays,
+    netPerSaleXof: globalNetPerSale,
   };
+}
+
+/** Décale une date ISO d'un nombre de jours, en UTC. */
+export function shiftDay(day: string, delta: number): string {
+  const date = new Date(`${day}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + delta);
+  return date.toISOString().slice(0, 10);
 }
 
 /** Liste tous les jours entre deux dates incluses, en UTC. */

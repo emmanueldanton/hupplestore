@@ -1,4 +1,5 @@
 import { Amount } from "./Amount";
+import { VerdictBadge } from "./VerdictBadge";
 import { formatInt, formatRoas, formatXof } from "@/lib/money";
 import type { CampaignPerformance } from "@/lib/types";
 
@@ -6,6 +7,10 @@ import type { CampaignPerformance } from "@/lib/types";
  * Tableau des campagnes, trié par marge décroissante : ce qui rapporte en haut,
  * ce qui coûte en bas. Le tri par ROAS serait trompeur : une campagne à ROAS
  * 5× sur 2 000 F de dépense pèse moins qu'une campagne à 1,4× sur 200 000 F.
+ *
+ * La colonne ROAS affiche une fourchette, pas un point. Sur de faibles volumes
+ * cette fourchette est si large qu'elle rend visible ce qu'un chiffre unique
+ * cachait : on ne sait pas.
  */
 export function CampaignTable({
   campaigns,
@@ -22,25 +27,21 @@ export function CampaignTable({
 
   return (
     <div className="scroll-x -mx-1 px-1">
-      <table className="w-full min-w-[760px] border-collapse text-left">
+      <table className="w-full min-w-[900px] border-collapse text-left">
         <thead>
           <tr className="border-b border-hairline">
             <Th>Campagne</Th>
             <Th align="right">Dépense</Th>
-            <Th align="right">Net encaissé</Th>
+            <Th align="right">Net attribué</Th>
             <Th align="right">Marge</Th>
             <Th align="right">ROAS</Th>
-            <Th align="right">Ventes</Th>
-            <Th align="right">CPA / seuil</Th>
+            <Th align="right">Verdict</Th>
           </tr>
         </thead>
         <tbody>
           {campaigns.map((campaign) => {
             const isLoss = campaign.marginXof < 0;
-            const overBreakEven =
-              campaign.cpaXof !== null &&
-              campaign.breakEvenCpaXof !== null &&
-              campaign.cpaXof > campaign.breakEvenCpaXof;
+            const { confidence } = campaign;
 
             return (
               <tr
@@ -56,11 +57,25 @@ export function CampaignTable({
                       <>
                         {formatInt(campaign.clicks)} clic
                         {campaign.clicks > 1 ? "s" : ""} ·{" "}
-                        {formatInt(campaign.impressions)} impressions
+                        {campaign.sales.toLocaleString("fr-FR", {
+                          maximumFractionDigits: 1,
+                        })}{" "}
+                        vente{campaign.sales > 1 ? "s" : ""}
+                        {confidence.breakEvenCvr !== null && (
+                          <>
+                            {" "}
+                            · seuil{" "}
+                            {(confidence.breakEvenCvr * 100).toLocaleString(
+                              "fr-FR",
+                              { maximumFractionDigits: 2 },
+                            )}
+                            {" %"} de conversion
+                          </>
+                        )}
                       </>
                     ) : (
                       <span className="text-negative">
-                        Non mappée : aucun revenu ne lui est attribué
+                        Non mappée, aucun revenu ne lui est attribué
                       </span>
                     )}
                   </div>
@@ -86,41 +101,28 @@ export function CampaignTable({
                 </Td>
 
                 <Td align="right">
-                  <span
-                    className={`inline-block rounded-full px-2.5 py-1 text-[0.75rem] font-bold ${
-                      campaign.roas === null
-                        ? "bg-surface-sunken text-ink-muted"
-                        : campaign.roas >= 1
-                          ? "bg-positive-soft text-positive"
-                          : "bg-negative-soft text-negative"
-                    }`}
-                  >
+                  <div className="tabular text-[0.95rem] font-bold text-ink">
                     {formatRoas(campaign.roas)}
-                  </span>
+                  </div>
+                  {confidence.roasLow !== null && confidence.roasHigh !== null && (
+                    <div className="mt-0.5 text-[0.68rem] whitespace-nowrap text-ink-muted">
+                      entre {formatRoas(confidence.roasLow)} et{" "}
+                      {formatRoas(confidence.roasHigh)}
+                    </div>
+                  )}
                 </Td>
 
                 <Td align="right">
-                  <span className="tabular text-[0.9rem] text-ink">
-                    {campaign.sales.toLocaleString("fr-FR", {
-                      maximumFractionDigits: 1,
-                    })}
-                  </span>
-                </Td>
-
-                <Td align="right">
-                  <div
-                    className={`tabular text-[0.85rem] font-semibold ${
-                      overBreakEven ? "text-negative" : "text-ink"
-                    }`}
-                  >
-                    {campaign.cpaXof === null ? "n/d" : formatXof(campaign.cpaXof)}
-                  </div>
-                  <div className="mt-0.5 text-[0.7rem] text-ink-muted">
-                    seuil{" "}
-                    {campaign.breakEvenCpaXof === null
-                      ? "n/d"
-                      : formatXof(campaign.breakEvenCpaXof)}
-                  </div>
+                  <VerdictBadge
+                    verdict={confidence.verdict}
+                    probability={confidence.probabilityProfitable}
+                  />
+                  {confidence.clicksNeededToConclude !== null && (
+                    <div className="mt-1 text-[0.68rem] whitespace-nowrap text-ink-muted">
+                      ~{formatInt(confidence.clicksNeededToConclude)} clics de
+                      plus pour trancher
+                    </div>
+                  )}
                 </Td>
               </tr>
             );
@@ -158,9 +160,7 @@ function Td({
   align?: "left" | "right";
 }) {
   return (
-    <td
-      className={`py-4 ${align === "right" ? "pl-4 text-right" : "pr-4"}`}
-    >
+    <td className={`py-4 ${align === "right" ? "pl-4 text-right" : "pr-4"}`}>
       {children}
     </td>
   );

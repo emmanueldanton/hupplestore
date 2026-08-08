@@ -177,6 +177,148 @@ describe("buildReport : attribution", () => {
   });
 });
 
+describe("buildReport : fenêtre d'attribution", () => {
+  const params = {
+    from: "2026-08-01",
+    to: "2026-08-05",
+    // Dépense le 1er, achat le 3 : deux jours d'écart.
+    sales: [sale({ date: "2026-08-03" })],
+    spend: [spend({ date: "2026-08-01" })],
+    campaignMap: { "Campagne A": "prd_a" },
+  };
+
+  it("n'attribue rien au jour le jour quand l'achat est différé", () => {
+    const report = buildReport({ ...params, attributionWindowDays: 0 });
+    expect(report.unattributed.sales).toBe(1);
+    expect(report.campaigns[0].netXof).toBe(0);
+  });
+
+  it("attribue la vente dès que la fenêtre couvre l'écart", () => {
+    const report = buildReport({ ...params, attributionWindowDays: 3 });
+    expect(report.unattributed.sales).toBe(0);
+    expect(report.campaigns[0].netXof).toBe(4250);
+  });
+
+  it("s'arrête net au bord de la fenêtre", () => {
+    // Un jour d'écart demandé pour deux jours réels : rien ne doit passer.
+    const report = buildReport({ ...params, attributionWindowDays: 1 });
+    expect(report.unattributed.sales).toBe(1);
+  });
+
+  it("cumule la dépense de la fenêtre pour pondérer les campagnes", () => {
+    const report = buildReport({
+      from: "2026-08-01",
+      to: "2026-08-05",
+      sales: [sale({ date: "2026-08-03", netXof: 4000, grossXof: 4000 })],
+      spend: [
+        // A dépense sur deux jours, B sur un seul : A doit peser le double.
+        spend({ campaignId: "c1", campaignName: "A", date: "2026-08-02", spendXof: 1000 }),
+        spend({ campaignId: "c1", campaignName: "A", date: "2026-08-03", spendXof: 1000 }),
+        spend({ campaignId: "c2", campaignName: "B", date: "2026-08-03", spendXof: 1000 }),
+      ],
+      campaignMap: { A: "prd_a", B: "prd_a" },
+      attributionWindowDays: 2,
+    });
+
+    const a = report.campaigns.find((c) => c.campaignId === "c1");
+    const b = report.campaigns.find((c) => c.campaignId === "c2");
+    expect(a?.netXof).toBeCloseTo(2666.67, 1);
+    expect(b?.netXof).toBeCloseTo(1333.33, 1);
+  });
+
+  it("ne compte jamais une vente plus d'une fois, quelle que soit la fenêtre", () => {
+    for (const attributionWindowDays of [0, 1, 3, 7]) {
+      const report = buildReport({ ...params, attributionWindowDays });
+      const attribue = report.campaigns.reduce((sum, c) => sum + c.netXof, 0);
+      expect(attribue + report.unattributed.netXof).toBeCloseTo(
+        report.kpis.netXof,
+        6,
+      );
+    }
+  });
+});
+
+describe("buildReport : qualification statistique", () => {
+  it("refuse de conclure sur une campagne à faible trafic", () => {
+    const report = buildReport({
+      from: "2026-08-01",
+      to: "2026-08-03",
+      // La campagne ne vend rien, mais la boutique vend par ailleurs : il
+      // existe donc un panier de référence, et un seuil calculable.
+      sales: [sale({ productId: "prd_autre" })],
+      spend: [spend({ clicks: 41, spendXof: 4783 })],
+      campaignMap: { "Campagne A": "prd_a" },
+    });
+
+    // Zéro vente sur 41 clics ne prouve rien : le verdict doit rester ouvert.
+    expect(report.campaigns[0].confidence.verdict).toBe("indetermine");
+    expect(report.campaigns[0].confidence.clicksNeededToConclude).toBeGreaterThan(0);
+  });
+
+  it("annonce l'absence de référence plutôt qu'un faux seuil", () => {
+    // Aucune vente nulle part : impossible de savoir ce que vaut une conversion.
+    const report = buildReport({
+      from: "2026-08-01",
+      to: "2026-08-03",
+      sales: [],
+      spend: [spend({ clicks: 41, spendXof: 4783 })],
+      campaignMap: { "Campagne A": "prd_a" },
+    });
+
+    expect(report.campaigns[0].confidence.verdict).toBe("sans_donnees");
+  });
+
+  it("ne contredit jamais la marge par la probabilité", () => {
+    // Piège constaté sur données réelles : une campagne affichait +9 033 F de
+    // marge et « 19 % de chances d'être rentable ». Le seuil d'équilibre était
+    // calculé sur le panier moyen du produit, que cette campagne ne réalisait
+    // pas. Marge positive et probabilité basse ne doivent jamais coexister.
+    const report = buildReport({
+      from: "2026-08-01",
+      to: "2026-08-03",
+      sales: [
+        // Ventes bien plus grosses que la moyenne du produit ailleurs.
+        sale({ id: "a", grossXof: 12000, netXof: 10000 }),
+        sale({ id: "b", grossXof: 12000, netXof: 10000 }),
+        sale({ id: "c", grossXof: 12000, netXof: 10000 }),
+        sale({ id: "d", productId: "prd_autre", netXof: 500 }),
+      ],
+      spend: [spend({ clicks: 1000, spendXof: 20000 })],
+      campaignMap: { "Campagne A": "prd_a" },
+    });
+
+    const campaign = report.campaigns[0];
+    expect(campaign.marginXof).toBeGreaterThan(0);
+    expect(campaign.confidence.probabilityProfitable).toBeGreaterThan(0.5);
+  });
+
+  it("n'invente aucune probabilité pour une campagne non mappée", () => {
+    const report = buildReport({
+      from: "2026-08-01",
+      to: "2026-08-03",
+      sales: [sale()],
+      spend: [spend({ campaignName: "Inconnue", clicks: 13, spendXof: 751 })],
+      campaignMap: {},
+    });
+
+    expect(report.campaigns[0].isMapped).toBe(false);
+    expect(report.campaigns[0].confidence.verdict).toBe("sans_donnees");
+    expect(report.campaigns[0].confidence.probabilityProfitable).toBeNull();
+  });
+
+  it("tranche quand le trafic devient suffisant", () => {
+    const report = buildReport({
+      from: "2026-08-01",
+      to: "2026-08-03",
+      sales: [sale()],
+      spend: [spend({ clicks: 5000, spendXof: 400000 })],
+      campaignMap: { "Campagne A": "prd_a" },
+    });
+
+    expect(report.campaigns[0].confidence.verdict).toBe("perdante");
+  });
+});
+
 describe("buildReport : seuil de rentabilité", () => {
   it("fixe le seuil au net moyen par vente", () => {
     const report = buildReport({

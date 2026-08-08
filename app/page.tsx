@@ -5,7 +5,8 @@ import { Amount } from "@/components/Amount";
 import { CampaignTable } from "@/components/CampaignTable";
 import { ProductTable } from "@/components/ProductTable";
 import { SpendRevenueChart } from "@/components/SpendRevenueChart";
-import { loadDashboard } from "@/lib/report";
+import { AttributionSensitivity } from "@/components/AttributionSensitivity";
+import { loadDashboard, SENSITIVITY_WINDOWS } from "@/lib/report";
 import { DEFAULT_PERIOD, isPeriodKey, PERIODS } from "@/lib/period";
 import { formatInt } from "@/lib/money";
 
@@ -18,7 +19,18 @@ export default async function Page({ searchParams }: PageProps<"/">) {
   const raw = Array.isArray(params.period) ? params.period[0] : params.period;
   const period = isPeriodKey(raw) ? raw : DEFAULT_PERIOD;
 
-  const { current, previous, warnings, fatal } = await loadDashboard(period);
+  const rawWindow = Array.isArray(params.window)
+    ? params.window[0]
+    : params.window;
+  const parsedWindow = Number(rawWindow);
+  const windowDays = SENSITIVITY_WINDOWS.includes(
+    parsedWindow as (typeof SENSITIVITY_WINDOWS)[number],
+  )
+    ? parsedWindow
+    : 0;
+
+  const { current, previous, sensitivity, warnings, fatal } =
+    await loadDashboard(period, windowDays);
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-4 py-5 sm:px-6 sm:py-8">
@@ -100,12 +112,32 @@ export default async function Page({ searchParams }: PageProps<"/">) {
           <h2 className="text-[0.95rem] font-semibold text-ink">
             Performance par campagne
           </h2>
-          <p className="mt-1 text-[0.78rem] text-ink-muted">
-            Triées par marge. Le seuil est le net moyen par vente : au-delà,
-            chaque acquisition te coûte de l&apos;argent.
+          <p className="mt-1 text-[0.78rem] leading-relaxed text-ink-muted">
+            Triées par marge. Le ROAS est donné avec sa fourchette : sur de
+            faibles volumes, un chiffre unique donnerait une fausse impression
+            de certitude.
           </p>
         </div>
         <CampaignTable campaigns={current.campaigns} />
+      </section>
+
+      {/* ── Robustesse de l'attribution ────────────────────────────────── */}
+      <section className="card mt-4 p-6 sm:p-7">
+        <div className="mb-5">
+          <h2 className="text-[0.95rem] font-semibold text-ink">
+            Le classement tient-il debout ?
+          </h2>
+          <p className="mt-1 text-[0.78rem] leading-relaxed text-ink-muted">
+            Rien ne garantit qu&apos;un achat suive son clic le jour même. Le
+            même calcul est rejoué à plusieurs délais possibles : si le verdict
+            ne bouge pas, il est solide.
+          </p>
+        </div>
+        <AttributionSensitivity
+          rows={sensitivity}
+          activeWindow={windowDays}
+          period={period}
+        />
       </section>
 
       {/* ── Produits et revenu non attribué ────────────────────────────── */}

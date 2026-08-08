@@ -126,6 +126,50 @@ grossière au jour le jour.
 Le revenu d'un produit qu'aucune campagne ne poussait tombe dans **« Revenu non
 attribué »**, affiché en clair.
 
+### L'incertitude
+
+Une campagne à 41 clics et zéro vente affiche un ROAS de 0. Cela ressemble à un
+verdict, mais n'en est pas un : si son taux de conversion réel valait 1 %, la
+probabilité d'observer zéro vente sur 41 clics serait encore de 66 %.
+
+Le tableau de bord traite donc les conversions comme un tirage binomial et
+raisonne sur la loi a posteriori du taux de conversion, avec un a priori de
+Jeffreys `Beta(0,5 ; 0,5)`.
+
+Le point de bascule est le **taux de conversion d'équilibre** :
+
+```
+seuil = coût par clic / net moyen par vente
+```
+
+En dessous, la campagne perd de l'argent. La question devient alors « quelle est
+la probabilité que le taux réel dépasse ce seuil ? », à laquelle les données
+peuvent répondre, là où « cette campagne est-elle bonne ? » n'a pas de réponse
+chiffrable.
+
+Trois verdicts en découlent : **Rentable** au-delà de 95 % de probabilité,
+**Perdante** en dessous de 5 %, **Indéterminé** entre les deux. Ce dernier
+n'est pas un mauvais résultat, c'est une absence de résultat : la colonne
+indique alors combien de clics supplémentaires seraient nécessaires pour
+trancher.
+
+Conséquence pratique à ces volumes : **l'unité de décision est le thème, pas la
+campagne.** Prises isolément, la plupart des campagnes n'ont pas assez de
+trafic pour prouver quoi que ce soit.
+
+### La robustesse du classement
+
+Rien ne garantit qu'un achat suive son clic le jour même. Plutôt que de trancher
+arbitrairement, le calcul est rejoué à quatre fenêtres d'attribution (jour même,
+1, 3 et 7 jours) et les verdicts sont comparés.
+
+Une campagne dont le verdict ne bouge pas est **stable** : la conclusion tient
+quelle que soit l'hypothèse. Une campagne dont le verdict change reflète
+l'hypothèse autant que les données, et ne doit fonder aucune décision de budget.
+
+Sur cette boutique, plusieurs campagnes passent de 0,97 à 1,56 de ROAS selon la
+fenêtre retenue.
+
 ### Les limites, à connaître avant de décider
 
 - **Fuseaux horaires** : Meta agrège selon le fuseau du compte publicitaire,
