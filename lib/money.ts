@@ -22,8 +22,16 @@ export function getFallbackRateToXof(currency: string): number | null {
 
 export class UnsupportedCurrencyError extends Error {
   constructor(public readonly currency: string) {
+    const code = currency.toUpperCase();
+    // L'emplacement de la configuration diffère selon l'environnement : en
+    // production, renvoyer vers .env.local enverrait chercher un fichier qui
+    // n'existe pas sur le serveur.
+    const ou =
+      process.env.NODE_ENV === "production"
+        ? "dans les variables d'environnement Vercel, puis redéploie"
+        : "dans .env.local, puis relance le serveur";
     super(
-      `Devise « ${currency} » non convertible en XOF. Ajoute RATE_${currency.toUpperCase()}_XOF dans .env.local avec le taux de change.`,
+      `Ton compte publicitaire est en ${code}, et aucun taux de conversion vers le franc CFA n'est défini. Ajoute la variable RATE_${code}_XOF ${ou}. Sans elle, la dépense est écartée plutôt que mélangée à des montants en XOF, ce qui fausserait le ROAS.`,
     );
     this.name = "UnsupportedCurrencyError";
   }
