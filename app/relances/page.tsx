@@ -52,7 +52,7 @@ export default async function RelancesPage({
               <form action={logout}>
                 <button
                   type="submit"
-                  className="rounded-[var(--radius-pill)] bg-black/25 px-3.5 py-2 text-[0.8rem] font-semibold text-white/70 transition-colors hover:bg-black/35 hover:text-white"
+                  className="rounded-[var(--radius-pill)] bg-white/10 px-3.5 py-2 text-[0.8rem] font-semibold text-white/70 transition-colors hover:bg-white/20 hover:text-white"
                 >
                   Quitter
                 </button>

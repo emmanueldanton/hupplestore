@@ -65,7 +65,7 @@ export function Hero({
           <form action={logout}>
             <button
               type="submit"
-              className="rounded-[var(--radius-pill)] bg-black/25 px-3.5 py-2 text-[0.8rem] font-semibold text-white/70 transition-colors hover:bg-black/35 hover:text-white"
+              className="rounded-[var(--radius-pill)] bg-white/10 px-3.5 py-2 text-[0.8rem] font-semibold text-white/70 transition-colors hover:bg-white/20 hover:text-white"
             >
               Quitter
             </button>
@@ -94,9 +94,11 @@ export function Hero({
             </span>
             <span
               className={`rounded-full px-2.5 py-1 text-[0.7rem] font-bold ${
+                // Sur fond marine, un noir translucide se confondrait avec le
+                // fond : l'alerte doit rester lisible, donc orange.
                 isProfitable
                   ? "bg-white/90 text-ink"
-                  : "bg-black/35 text-white"
+                  : "bg-alert text-white"
               }`}
             >
               ROAS {formatRoas(roas)}

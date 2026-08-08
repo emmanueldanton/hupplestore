@@ -25,10 +25,24 @@
 
   --hairline: rgba(29, 29, 27, 0.09);
 
-  /* Bleu prélevé sur le logo (#2766d9), décliné en clair et en foncé. */
-  --brand-from: #4a86f0;
-  --brand-mid: #2766d9;
-  --brand-to: #1a49ab;
+  /*
+   * Bleu marine pour les bandeaux, bleu du logo pour ce qui est cliquable.
+   * Un dégradé saturé attire l'œil sur le décor ; un fond profond le laisse
+   * aux chiffres, qui sont la seule chose à regarder ici.
+   */
+  --brand-from: #1e3c74;
+  --brand-mid: #13294f;
+  --brand-to: #0a172f;
+
+  /* Bleu prélevé sur le logo, réservé aux éléments interactifs. */
+  --brand-accent: #2766d9;
+
+  /*
+   * Orange réservé à ce qui appelle une attention. Il ne décore rien : s'il
+   * apparaît, c'est qu'il y a quelque chose à regarder.
+   */
+  --alert: #d9611f;
+  --alert-soft: #fdf1e6;
 
   --positive: #10794a;
   --positive-soft: #e3f3ea;
@@ -55,6 +69,9 @@
   --color-positive-soft: var(--positive-soft);
   --color-negative: var(--negative);
   --color-negative-soft: var(--negative-soft);
+  --color-alert: var(--alert);
+  --color-alert-soft: var(--alert-soft);
+  --color-brand-accent: var(--brand-accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -70,15 +87,16 @@ body {
 
 .hero-gradient {
   background:
+    /* Voile discret : sur un fond profond, un éclat trop marqué grisaille. */
     radial-gradient(
       120% 140% at 82% 18%,
-      rgba(255, 255, 255, 0.22) 0%,
-      rgba(255, 255, 255, 0) 55%
+      rgba(120, 170, 255, 0.16) 0%,
+      rgba(120, 170, 255, 0) 58%
     ),
     linear-gradient(
       118deg,
       var(--brand-from) 0%,
-      var(--brand-mid) 46%,
+      var(--brand-mid) 52%,
       var(--brand-to) 100%
     );
 }

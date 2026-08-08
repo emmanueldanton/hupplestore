@@ -16,7 +16,7 @@ export function Notice({
 }) {
   const styles = {
     info: "border-hairline bg-surface-sunken text-ink-soft",
-    warning: "border-[#e8c98a] bg-[#fdf6e7] text-[#6b5316]",
+    warning: "border-alert/30 bg-alert-soft text-[#8a3d10]",
     error: "border-negative/30 bg-negative-soft text-[#7a2418]",
   }[tone];
 

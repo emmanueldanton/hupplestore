@@ -76,14 +76,14 @@ export function BottomNav({
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                   className={`h-[22px] w-[22px] transition-colors ${
-                    isActive ? "fill-[var(--brand-mid)]" : "fill-ink-muted"
+                    isActive ? "fill-[var(--brand-accent)]" : "fill-ink-muted"
                   }`}
                 >
                   {tab.icon}
                 </svg>
                 <span
                   className={`text-[0.68rem] font-semibold transition-colors ${
-                    isActive ? "text-[var(--brand-mid)]" : "text-ink-muted"
+                    isActive ? "text-[var(--brand-accent)]" : "text-ink-muted"
                   }`}
                 >
                   {tab.label}

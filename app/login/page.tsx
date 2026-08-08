@@ -79,7 +79,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
                 type="checkbox"
                 name="remember"
                 defaultChecked
-                className="h-4 w-4 accent-[var(--brand-mid)]"
+                className="h-4 w-4 accent-[var(--brand-accent)]"
               />
               Rester connecté sur cet appareil
             </label>

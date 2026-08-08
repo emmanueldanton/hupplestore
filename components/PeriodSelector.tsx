@@ -16,7 +16,7 @@ export function PeriodSelector({
   return (
     <nav
       aria-label="Période d'analyse"
-      className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-black/25 p-1 backdrop-blur-sm"
+      className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-white/10 p-1 backdrop-blur-sm"
     >
       {(Object.keys(PERIODS) as PeriodKey[]).map((key) => {
         const isActive = key === active;

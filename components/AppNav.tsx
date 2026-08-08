@@ -24,7 +24,7 @@ export function AppNav({
   return (
     <nav
       aria-label="Sections"
-      className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-black/25 p-1 backdrop-blur-sm"
+      className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-white/10 p-1 backdrop-blur-sm"
     >
       {tabs.map((tab) => {
         const isActive = tab.key === active;
