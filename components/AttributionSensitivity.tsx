@@ -35,11 +35,11 @@ export function AttributionSensitivity({
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-center gap-2">
+      <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-2">
         <span className="text-[0.78rem] text-ink-soft">
-          Fenêtre appliquée au tableau ci-dessus :
+          Fenêtre appliquée ci-dessus :
         </span>
-        <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-surface-sunken p-1">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] bg-surface-sunken p-1">
           {SENSITIVITY_WINDOWS.map((days) => (
             <Link
               key={days}
@@ -57,7 +57,46 @@ export function AttributionSensitivity({
         </span>
       </div>
 
-      <div className="scroll-x -mx-1 px-1">
+      {/* Sur petit écran, une ligne par campagne avec ses quatre valeurs en
+          regard, plutôt qu'un tableau qu'il faudrait faire défiler. */}
+      <ul className="flex flex-col gap-3 lg:hidden">
+        {withSpend.map((row) => (
+          <li
+            key={row.campaignId}
+            className="rounded-[var(--radius-card)] border border-hairline bg-surface-sunken p-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="min-w-0 text-[0.85rem] leading-snug font-semibold text-ink">
+                {row.campaignName}
+              </p>
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[0.7rem] font-bold whitespace-nowrap ${
+                  row.stable
+                    ? "bg-surface text-ink-soft"
+                    : "bg-negative-soft text-negative"
+                }`}
+              >
+                {row.stable ? "Stable" : "Instable"}
+              </span>
+            </div>
+
+            <div className="mt-3.5 grid grid-cols-4 gap-2">
+              {SENSITIVITY_WINDOWS.map((days) => (
+                <div key={days}>
+                  <span className="block text-[0.65rem] text-ink-muted">
+                    {days === 0 ? "J même" : `${days} j`}
+                  </span>
+                  <span className="tabular mt-0.5 block text-[0.85rem] font-semibold text-ink">
+                    {formatRoas(row.roasByWindow[days] ?? null)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="scroll-x -mx-1 hidden px-1 lg:block">
         <table className="w-full min-w-[620px] border-collapse text-left">
           <thead>
             <tr className="border-b border-hairline">

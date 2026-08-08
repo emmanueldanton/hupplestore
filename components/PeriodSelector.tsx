@@ -25,13 +25,14 @@ export function PeriodSelector({
             key={key}
             href={`/?period=${key}&window=${windowDays}`}
             aria-current={isActive ? "page" : undefined}
-            className={`rounded-[var(--radius-pill)] px-3.5 py-1.5 text-[0.8rem] font-semibold transition-colors ${
+            className={`rounded-[var(--radius-pill)] px-3 py-1.5 text-[0.8rem] font-semibold transition-colors sm:px-3.5 ${
               isActive
                 ? "bg-white text-ink"
                 : "text-white/70 hover:bg-white/10 hover:text-white"
             }`}
           >
-            {PERIODS[key].label}
+            <span className="sm:hidden">{PERIODS[key].short}</span>
+            <span className="hidden sm:inline">{PERIODS[key].label}</span>
           </Link>
         );
       })}

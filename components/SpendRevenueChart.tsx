@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DailyPoint } from "@/lib/types";
 import { formatRoas, formatXof } from "@/lib/money";
 import { formatDayLabel } from "@/lib/period";
@@ -14,11 +14,14 @@ interface Slot {
 }
 
 /**
- * Regroupe les jours par semaine au-delà d'un trimestre : au-delà d'environ
- * 90 barres, chacune devient trop fine pour être lue ou survolée.
+ * Regroupe les jours pour ne jamais dépasser un nombre de barres lisible.
+ *
+ * Le plafond dépend de la largeur : sur un téléphone, 52 barres laissent moins
+ * de trois pixels à chacune, ce qui ne se lit pas et ne se survole pas. On
+ * regroupe donc plus agressivement en dessous de 640 px.
  */
-function toSlots(daily: DailyPoint[]): Slot[] {
-  const groupSize = daily.length > 92 ? 7 : 1;
+function toSlots(daily: DailyPoint[], maxSlots: number): Slot[] {
+  const groupSize = Math.max(1, Math.ceil(daily.length / maxSlots));
 
   if (groupSize === 1) {
     return daily.map((point) => ({
@@ -48,7 +51,20 @@ function toSlots(daily: DailyPoint[]): Slot[] {
 
 export function SpendRevenueChart({ daily }: { daily: DailyPoint[] }) {
   const [hovered, setHovered] = useState<number | null>(null);
-  const slots = useMemo(() => toSlots(daily), [daily]);
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 640px)");
+    const sync = () => setCompact(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
+  const slots = useMemo(
+    () => toSlots(daily, compact ? 24 : 92),
+    [daily, compact],
+  );
 
   const max = Math.max(...slots.map((s) => Math.max(s.spendXof, s.netXof)), 1);
 
@@ -78,7 +94,15 @@ export function SpendRevenueChart({ daily }: { daily: DailyPoint[] }) {
         {/* Infobulle sombre arrondie, ancrée au-dessus de la colonne survolée. */}
         {active && hovered !== null && (
           <div
-            className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-2xl bg-ink px-4 py-3 text-white shadow-lg"
+            className={`pointer-events-none absolute z-10 rounded-2xl bg-ink px-4 py-3 text-white shadow-lg ${
+              // Aux extrémités, une infobulle centrée déborderait de la carte.
+              // On l'ancre alors par son bord intérieur.
+              hovered / slots.length < 0.18
+                ? "translate-x-0"
+                : hovered / slots.length > 0.82
+                  ? "-translate-x-full"
+                  : "-translate-x-1/2"
+            }`}
             style={{
               left: `${((hovered + 0.5) / slots.length) * 100}%`,
               bottom: "40%",

@@ -1,4 +1,5 @@
 import { Amount } from "./Amount";
+import { CampaignCard } from "./CampaignCard";
 import { VerdictBadge } from "./VerdictBadge";
 import { formatInt, formatRoas, formatXof } from "@/lib/money";
 import type { CampaignPerformance } from "@/lib/types";
@@ -26,8 +27,17 @@ export function CampaignTable({
   }
 
   return (
-    <div className="scroll-x -mx-1 px-1">
-      <table className="w-full min-w-[900px] border-collapse text-left">
+    <>
+      {/* Sous 900 px, le tableau ne montrerait que la colonne des noms. On
+          change de mise en page plutôt que de forcer un défilement latéral. */}
+      <ul className="flex flex-col gap-3 lg:hidden">
+        {campaigns.map((campaign) => (
+          <CampaignCard key={campaign.campaignId} campaign={campaign} />
+        ))}
+      </ul>
+
+      <div className="scroll-x -mx-1 hidden px-1 lg:block">
+        <table className="w-full min-w-[900px] border-collapse text-left">
         <thead>
           <tr className="border-b border-hairline">
             <Th>Campagne</Th>
@@ -127,9 +137,10 @@ export function CampaignTable({
               </tr>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

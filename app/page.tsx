@@ -43,11 +43,24 @@ export default async function Page({ searchParams }: PageProps<"/">) {
               {fatal}
             </Notice>
           )}
-          {warnings.map((warning, index) => (
-            <Notice key={index} tone="warning" title="À savoir">
-              {warning}
+          {/* Un seul bandeau plutôt qu'un par avertissement : empilés, ils
+              occupaient un écran entier sur téléphone avant le moindre chiffre. */}
+          {warnings.length > 0 && (
+            <Notice
+              tone="warning"
+              title={
+                warnings.length === 1
+                  ? "À savoir"
+                  : `${warnings.length} points à savoir`
+              }
+            >
+              <ul className="flex list-disc flex-col gap-2 pl-4">
+                {warnings.map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul>
             </Notice>
-          ))}
+          )}
         </div>
       )}
 

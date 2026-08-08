@@ -3,11 +3,15 @@
  * horodatages Chariow.
  */
 
+/**
+ * `short` sert aux écrans étroits : sur un téléphone, quatre pilules libellées
+ * en toutes lettres plus le bouton de sortie ne tiennent pas sur une ligne.
+ */
 export const PERIODS = {
-  "7d": { label: "7 jours", days: 7 },
-  "30d": { label: "30 jours", days: 30 },
-  "90d": { label: "90 jours", days: 90 },
-  "365d": { label: "12 mois", days: 365 },
+  "7d": { label: "7 jours", short: "7 j", days: 7 },
+  "30d": { label: "30 jours", short: "30 j", days: 30 },
+  "90d": { label: "90 jours", short: "90 j", days: 90 },
+  "365d": { label: "12 mois", short: "12 m", days: 365 },
 } as const;
 
 export type PeriodKey = keyof typeof PERIODS;
