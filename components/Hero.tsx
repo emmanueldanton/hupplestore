@@ -1,4 +1,5 @@
 import { LogoutButton } from "./LogoutButton";
+import { RefreshButton } from "./RefreshButton";
 import { Amount } from "./Amount";
 import { AppNav } from "./AppNav";
 import { BrandMark } from "./BrandMark";
@@ -66,8 +67,8 @@ export function Hero({
             windowDays={report.attributionWindowDays}
             basePath="/"
           />
+          <RefreshButton />
           <LogoutButton />
-
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { LogoutButton } from "@/components/LogoutButton";
+import { RefreshButton } from "@/components/RefreshButton";
 import { Amount } from "@/components/Amount";
 import { AppNav } from "@/components/AppNav";
 import { BottomNav } from "@/components/BottomNav";
@@ -52,6 +53,7 @@ export default async function VeillePage({ searchParams }: PageProps<"/veille">)
             </div>
             <div className="flex items-center gap-2">
               <PeriodSelector active={period} windowDays={0} basePath="/veille" />
+              <RefreshButton />
               <LogoutButton />
             </div>
           </div>
