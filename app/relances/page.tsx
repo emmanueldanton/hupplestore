@@ -1,4 +1,4 @@
-import { logout } from "@/app/login/actions";
+import { LogoutButton } from "@/components/LogoutButton";
 import { Amount } from "@/components/Amount";
 import { AppNav } from "@/components/AppNav";
 import { BottomNav } from "@/components/BottomNav";
@@ -49,14 +49,7 @@ export default async function RelancesPage({
             </div>
             <div className="flex items-center gap-2">
               <PeriodSelector active={period} windowDays={0} />
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="rounded-[var(--radius-pill)] bg-white/10 px-3.5 py-2 text-[0.8rem] font-semibold text-white/70 transition-colors hover:bg-white/20 hover:text-white"
-                >
-                  Quitter
-                </button>
-              </form>
+              <LogoutButton />
             </div>
           </div>
 

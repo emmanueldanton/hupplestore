@@ -1,4 +1,4 @@
-import { logout } from "@/app/login/actions";
+import { LogoutButton } from "./LogoutButton";
 import { Amount } from "./Amount";
 import { AppNav } from "./AppNav";
 import { BrandMark } from "./BrandMark";
@@ -62,14 +62,8 @@ export function Hero({
         </div>
         <div className="flex items-center gap-2">
           <PeriodSelector active={period} windowDays={report.attributionWindowDays} />
-          <form action={logout}>
-            <button
-              type="submit"
-              className="rounded-[var(--radius-pill)] bg-white/10 px-3.5 py-2 text-[0.8rem] font-semibold text-white/70 transition-colors hover:bg-white/20 hover:text-white"
-            >
-              Quitter
-            </button>
-          </form>
+          <LogoutButton />
+
         </div>
       </div>
 

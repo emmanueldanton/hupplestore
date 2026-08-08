@@ -8,8 +8,9 @@ import type { PeriodKey } from "@/lib/period";
  * consulté sur mobile : la navigation reste sous le pouce, au lieu d'imposer
  * un retour en haut de page à chaque changement d'écran.
  *
- * Sur grand écran elle disparaît au profit des onglets de l'en-tête, la
- * distance à parcourir avec une souris n'ayant pas la même importance.
+ * Les icônes sont dessinées au trait, épaisseur uniforme, extrémités et angles
+ * arrondis. Un aplat à cette taille devient une tache : le contour garde la
+ * forme lisible, et la couleur suffit à marquer l'onglet actif.
  */
 export type Tab = "rentabilite" | "tunnel" | "relances" | "veille";
 
@@ -25,9 +26,12 @@ const TABS: {
     path: "/",
     icon: (
       <>
-        <rect x="3" y="12" width="4" height="8" rx="1.2" />
-        <rect x="10" y="7" width="4" height="13" rx="1.2" />
-        <rect x="17" y="3" width="4" height="17" rx="1.2" />
+        {/* Barres tracées à la plume : des traits épais aux bouts ronds,
+            posés sur une ligne de base, plutôt que des rectangles pleins. */}
+        <path d="M4 19.5h16" />
+        <path d="M7.6 19.5v-4.2" strokeWidth={2.4} />
+        <path d="M12 19.5v-7.6" strokeWidth={2.4} />
+        <path d="M16.4 19.5v-11" strokeWidth={2.4} />
       </>
     ),
   },
@@ -36,7 +40,10 @@ const TABS: {
     label: "Tunnel",
     path: "/tunnel",
     icon: (
-      <path d="M3 5h18l-7 8v6l-4 2v-8L3 5z" />
+      <>
+        <path d="M4.6 5.4h14.8" />
+        <path d="M6.6 8.2l4.1 4.7v5.4l2.6 1.5v-6.9l4.1-4.7" />
+      </>
     ),
   },
   {
@@ -44,7 +51,13 @@ const TABS: {
     label: "Relances",
     path: "/relances",
     icon: (
-      <path d="M12 3a6 6 0 0 0-6 6v3.6L4.4 16h15.2L18 12.6V9a6 6 0 0 0-6-6zm0 18a2.6 2.6 0 0 0 2.5-2h-5A2.6 2.6 0 0 0 12 21z" />
+      <>
+        {/* Bulle de message, non pas cloche : cet onglet sert à écrire aux
+            acheteurs, pas à recevoir des notifications. */}
+        <path d="M12 4.4c-4.3 0-7.7 2.8-7.7 6.3 0 1.9 1 3.6 2.7 4.8v2.6c0 .5.5.8.9.5l2.3-1.5c.6.1 1.2.2 1.8.2 4.3 0 7.7-2.8 7.7-6.6S16.3 4.4 12 4.4z" />
+        <path d="M9.3 10.7h.01" strokeWidth={2.2} />
+        <path d="M14.7 10.7h.01" strokeWidth={2.2} />
+      </>
     ),
   },
   {
@@ -52,7 +65,10 @@ const TABS: {
     label: "Veille",
     path: "/veille",
     icon: (
-      <path d="M10.5 3a7.5 7.5 0 1 0 4.55 13.46l4.24 4.25 1.42-1.42-4.25-4.24A7.5 7.5 0 0 0 10.5 3zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z" />
+      <>
+        <circle cx="11" cy="10.8" r="6.1" />
+        <path d="M15.5 15.4l4 4.2" />
+      </>
     ),
   },
 ];
@@ -78,19 +94,32 @@ export function BottomNav({
               <Link
                 href={`${tab.path}?period=${period}`}
                 aria-current={isActive ? "page" : undefined}
-                className="flex h-[68px] flex-col items-center justify-center gap-1.5"
+                className="flex h-[68px] flex-col items-center justify-center gap-1"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  className={`h-[22px] w-[22px] transition-colors ${
-                    isActive ? "fill-[var(--brand-accent)]" : "fill-ink-muted"
+                {/* Pastille colorée sous l'onglet actif : à cette taille, un
+                    simple changement de teinte se repère mal du coin de l'œil. */}
+                <span
+                  className={`grid h-8 w-14 place-items-center rounded-[var(--radius-pill)] transition-colors ${
+                    isActive ? "bg-[var(--brand-accent)]/12" : "bg-transparent"
                   }`}
                 >
-                  {tab.icon}
-                </svg>
+                  <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.7}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`h-[21px] w-[21px] transition-colors ${
+                      isActive ? "text-[var(--brand-accent)]" : "text-ink-muted"
+                    }`}
+                  >
+                    {tab.icon}
+                  </svg>
+                </span>
                 <span
-                  className={`text-[0.68rem] font-semibold transition-colors ${
+                  className={`text-[0.66rem] font-semibold transition-colors ${
                     isActive ? "text-[var(--brand-accent)]" : "text-ink-muted"
                   }`}
                 >
