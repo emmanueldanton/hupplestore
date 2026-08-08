@@ -13,24 +13,30 @@
  */
 
 :root {
-  --bg: #efeeea;
+  /* Gris légèrement froid, pour accompagner le bleu sans le ternir. */
+  --bg: #eef0f5;
   --surface: #ffffff;
-  --surface-sunken: #f6f5f2;
+  --surface-sunken: #f4f6fa;
 
-  --ink: #14120f;
-  --ink-soft: #56514a;
-  --ink-muted: #97918a;
+  /* Le noir du logo, et non un gris neutre : la marque jusque dans le texte. */
+  --ink: #1d1d1b;
+  --ink-soft: #55565a;
+  --ink-muted: #91949c;
 
-  --hairline: rgba(20, 18, 15, 0.08);
+  --hairline: rgba(29, 29, 27, 0.09);
 
-  --brand-from: #ff8a3d;
-  --brand-mid: #f4562a;
-  --brand-to: #d93a19;
+  /* Bleu prélevé sur le logo (#2766d9), décliné en clair et en foncé. */
+  --brand-from: #4a86f0;
+  --brand-mid: #2766d9;
+  --brand-to: #1a49ab;
 
-  --positive: #17864a;
-  --positive-soft: #e6f4ec;
-  --negative: #d1402f;
-  --negative-soft: #fbeae7;
+  --positive: #10794a;
+  --positive-soft: #e3f3ea;
+  --negative: #cf3b34;
+  --negative-soft: #fbe9e8;
+
+  /* Hauteur de la barre d'onglets, pour dégager le bas des pages. */
+  --tabbar-height: 68px;
 
   --radius-hero: 32px;
   --radius-card: 22px;
@@ -107,6 +113,23 @@ body {
 .scroll-x {
   overflow-x: auto;
   scrollbar-width: thin;
+}
+
+/*
+ * Dégage le bas des pages pour la barre d'onglets fixe, encoche comprise.
+ * Sans cette réserve, la dernière carte passerait sous la barre et resterait
+ * inatteignable sur les téléphones à bord arrondi.
+ */
+.has-tabbar {
+  padding-bottom: calc(
+    var(--tabbar-height) + env(safe-area-inset-bottom, 0px) + 1.25rem
+  );
+}
+
+@media (min-width: 1024px) {
+  .has-tabbar {
+    padding-bottom: 2rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

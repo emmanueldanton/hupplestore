@@ -1,6 +1,8 @@
 import { logout } from "@/app/login/actions";
 import { Amount } from "@/components/Amount";
 import { AppNav } from "@/components/AppNav";
+import { BottomNav } from "@/components/BottomNav";
+import { BrandMark } from "@/components/BrandMark";
 import { Notice } from "@/components/Notice";
 import { PeriodSelector } from "@/components/PeriodSelector";
 import { RecoveryList } from "@/components/RecoveryList";
@@ -27,14 +29,15 @@ export default async function TunnelPage({ searchParams }: PageProps<"/tunnel">)
     current.attempts > 0 ? (current.failed + current.abandoned) / current.attempts : 0;
 
   return (
-    <main className="mx-auto w-full max-w-[1240px] px-4 py-5 sm:px-6 sm:py-8">
+    <>
+    <main className="has-tabbar mx-auto w-full max-w-[1240px] px-4 py-5 sm:px-6 sm:py-8">
       <header className="hero-gradient relative overflow-hidden rounded-[var(--radius-hero)] px-6 py-7 sm:px-9 sm:py-9">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/20 text-[0.9rem] font-bold text-white">
-              H
-            </span>
-            <AppNav active="tunnel" period={period} />
+            <BrandMark />
+            <div className="hidden lg:block">
+              <AppNav active="tunnel" period={period} />
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <PeriodSelector active={period} windowDays={0} />
@@ -300,6 +303,9 @@ export default async function TunnelPage({ searchParams }: PageProps<"/tunnel">)
         </Notice>
       </footer>
     </main>
+
+    <BottomNav active="tunnel" period={period} />
+    </>
   );
 }
 

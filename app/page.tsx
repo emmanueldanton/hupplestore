@@ -1,3 +1,4 @@
+import { BottomNav } from "@/components/BottomNav";
 import { Hero } from "@/components/Hero";
 import { KpiCard } from "@/components/KpiCard";
 import { Notice } from "@/components/Notice";
@@ -33,7 +34,8 @@ export default async function Page({ searchParams }: PageProps<"/">) {
     await loadDashboard(period, windowDays);
 
   return (
-    <main className="mx-auto w-full max-w-[1240px] px-4 py-5 sm:px-6 sm:py-8">
+    <>
+    <main className="has-tabbar mx-auto w-full max-w-[1240px] px-4 py-5 sm:px-6 sm:py-8">
       <Hero report={current} previous={previous} period={period} />
 
       {(fatal || warnings.length > 0) && (
@@ -221,5 +223,8 @@ export default async function Page({ searchParams }: PageProps<"/">) {
         </Notice>
       </footer>
     </main>
+
+    <BottomNav active="rentabilite" period={period} />
+    </>
   );
 }

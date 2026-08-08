@@ -12,12 +12,13 @@ export function AppNav({
   active,
   period,
 }: {
-  active: "rentabilite" | "tunnel";
+  active: "rentabilite" | "tunnel" | "relances";
   period: PeriodKey;
 }) {
   const tabs = [
     { key: "rentabilite" as const, label: "Rentabilité", href: `/?period=${period}` },
     { key: "tunnel" as const, label: "Tunnel", href: `/tunnel?period=${period}` },
+    { key: "relances" as const, label: "Relances", href: `/relances?period=${period}` },
   ];
 
   return (

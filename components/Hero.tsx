@@ -1,6 +1,7 @@
 import { logout } from "@/app/login/actions";
 import { Amount } from "./Amount";
 import { AppNav } from "./AppNav";
+import { BrandMark } from "./BrandMark";
 import { TrendBadge } from "./TrendBadge";
 import { PeriodSelector } from "./PeriodSelector";
 import { computeDelta, formatRoas } from "@/lib/money";
@@ -53,10 +54,11 @@ export function Hero({
     <header className="hero-gradient relative overflow-hidden rounded-[var(--radius-hero)] px-6 py-7 sm:px-9 sm:py-9">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/20 text-[0.9rem] font-bold text-white">
-            H
-          </span>
-          <AppNav active="rentabilite" period={period} />
+          <BrandMark />
+          {/* Sur téléphone, la navigation vit dans la barre du bas. */}
+          <div className="hidden lg:block">
+            <AppNav active="rentabilite" period={period} />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <PeriodSelector active={period} windowDays={report.attributionWindowDays} />
