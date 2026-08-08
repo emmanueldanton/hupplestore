@@ -6,5 +6,6 @@ import { brandIcon } from "@/lib/brand-icon";
  * entier quelle que soit la découpe.
  */
 export function GET() {
-  return brandIcon(512, 56);
+  // Le logo occupe une part réduite de la tuile, pour survivre au rognage.
+  return brandIcon(512, 1.05);
 }

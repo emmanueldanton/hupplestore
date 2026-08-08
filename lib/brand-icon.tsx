@@ -1,18 +1,20 @@
 import { ImageResponse } from "next/og";
+import { LOGO_DATA_URI } from "./logo-data";
 
 /**
- * Icône de l'application, générée plutôt que stockée.
+ * Icône de l'application, construite à partir du logo HUPPLE STORE.
  *
- * Elle reprend le monogramme et le dégradé du tableau de bord : l'icône sur
- * l'écran d'accueil doit être reconnaissable comme le même produit que la page
- * qu'elle ouvre.
+ * Le fichier source porte une large marge blanche, utile en impression mais
+ * ruineuse sur un écran d'accueil : à taille réelle, le logo n'occuperait que
+ * la moitié de la tuile. On agrandit donc l'image au delà du cadre pour
+ * rogner cette marge.
  *
- * `padding` sert aux icônes dites « maskable » : Android peut rogner l'icône
- * en cercle ou en losange selon le lanceur, et découperait le monogramme s'il
- * touchait les bords. La zone sûre correspond à 80 % de la largeur.
+ * `safeRatio` fixe la part de la tuile réellement occupée. Les icônes dites
+ * « maskable » en réservent moins : Android rogne l'icône en cercle ou en
+ * losange selon le lanceur, et couperait le chariot s'il touchait les bords.
  */
-export function brandIcon(size: number, padding = 0) {
-  const inner = size - padding * 2;
+export function brandIcon(size: number, safeRatio = 1.42) {
+  const rendered = Math.round(size * safeRatio);
 
   return new ImageResponse(
     (
@@ -23,33 +25,18 @@ export function brandIcon(size: number, padding = 0) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#f4562a",
+          overflow: "hidden",
+          background: "#ffffff",
         }}
       >
-        <div
-          style={{
-            width: inner,
-            height: inner,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: padding > 0 ? inner * 0.22 : 0,
-            backgroundImage:
-              "linear-gradient(118deg, #ff8a3d 0%, #f4562a 46%, #d93a19 100%)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              fontSize: inner * 0.58,
-              fontWeight: 700,
-              color: "white",
-              letterSpacing: -inner * 0.03,
-            }}
-          >
-            H
-          </div>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={LOGO_DATA_URI}
+          alt=""
+          width={rendered}
+          height={rendered}
+          style={{ objectFit: "contain" }}
+        />
       </div>
     ),
     { width: size, height: size },
