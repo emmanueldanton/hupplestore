@@ -1,6 +1,6 @@
 {
   "_lisez_moi": [
-    "Table de correspondance : campagne Facebook -> produit(s) HUPPLE STORE.",
+    "Table de correspondance : campagne Facebook vers produit(s) HUPPLE STORE.",
     "La clé est le NOM EXACT de la campagne dans le gestionnaire de publicités",
     "(la casse et les espaces de bord sont ignorés), ou son identifiant numérique.",
     "La valeur est un identifiant produit, ou une liste si la campagne en pousse plusieurs.",
@@ -10,20 +10,56 @@
   ],
 
   "_produits_disponibles": {
-    "prd_umqgm8su": "Le Pack Orateur Complet (bundle), 4 999 F",
-    "prd_xv18ufmo": "Mon Enfant Ose Parler, 2 200 F",
+    "prd_4qpa9s": "Deviens l'Orateur qu'on Écoute, 3 900 F, 149 ventes",
+    "prd_qgn2mj": "92 Techniques pour Engager la Conversation, 3 900 F, 47 ventes",
+    "prd_0m2vfj": "L'Art Oratoire : Parlez avec Autorité, 3 900 F, 31 ventes",
+    "prd_umqgm8su": "Le Pack Orateur Complet (bundle), 4 999 F, 6 ventes",
+    "prd_gcozed": "Lancer et Monétiser un Influenceur IA, 4 900 F, 4 ventes",
+    "prd_tdrx0z": "Raviver votre relation amoureuse, 1 900 F, 1 vente",
+    "prd_sgbovr": "Deviens Plus Éloquent en 15 Jours V2.0, 1 vente",
     "prd_5qby7y": "La Science de la Richesse + MyFinanx, 4 900 F",
-    "prd_0m2vfj": "L'Art Oratoire : Parlez avec Autorité, 3 900 F",
-    "prd_gcozed": "Lancer et Monétiser un Influenceur IA, 4 900 F",
-    "prd_qgn2mj": "92 Techniques pour Engager la Conversation, 3 900 F",
-    "prd_tdrx0z": "Raviver votre relation amoureuse, 1 900 F",
-    "prd_4qpa9s": "Deviens l'Orateur qu'on Écoute, 3 900 F"
+    "prd_xv18ufmo": "Mon Enfant Ose Parler, 2 200 F, aucune vente",
+    "prd_pjgvz5": "Maîtrisez l'Arabe Rapidement"
   },
 
+  "_a_verifier": [
+    "Cinq campagnes sont volontairement laissées hors de la table, faute de",
+    "certitude sur le produit qu'elles poussent. Elles apparaîtront en",
+    "'Non mappée' : leur dépense est comptée, aucun revenu ne leur est attribué.",
+    "",
+    "  CBO-DP           126 677 F  thème sans produit précisé",
+    "  CBO-DP - TEST     44 538 F  thème sans produit précisé",
+    "  CBO-DPnew         38 067 F  thème sans produit précisé",
+    "  CBO-ELOQ-JR       16 861 F  'JR' pour junior ? Mon Enfant Ose Parler ?",
+    "  CBO-EBOOKS        15 855 F  plusieurs produits ?",
+    "",
+    "Cela représente 242 000 F de dépense, soit 34 % du total : tant que ces",
+    "cinq lignes ne sont pas renseignées, un tiers du budget reste inexpliqué.",
+    "Complète-les dans le bloc 'mapping' ci-dessous et supprime-les d'ici."
+  ],
+
   "mapping": {
-    "Pack Orateur - Acquisition": "prd_umqgm8su",
-    "Science de la Richesse - Broad": "prd_5qby7y",
-    "Relation Amoureuse - Retargeting": "prd_tdrx0z",
-    "Multi-produits - Développement personnel": ["prd_0m2vfj", "prd_4qpa9s"]
+    "CBO-DP - ELOQ": "prd_4qpa9s",
+    "CBO-ELOQUENCE": "prd_4qpa9s",
+    "ABO-ELOQUENCE": "prd_4qpa9s",
+    "CBO-ELOQUENT-NEW": "prd_4qpa9s",
+
+    "CBO-DP - ART": "prd_0m2vfj",
+    "Test - CBO-DP - ART": "prd_0m2vfj",
+    "CBO-ARTORATOIRE-NEW": "prd_0m2vfj",
+
+    "CBO-TECHNIQUE": "prd_qgn2mj",
+    "BCO-TECHNIQUE": "prd_qgn2mj",
+    "CBO-92TECH-NEW": "prd_qgn2mj",
+    "CBO-DP -TECH": "prd_qgn2mj",
+
+    "CBO-COUPLE": "prd_tdrx0z",
+    "CBO-COUPLE-CH": "prd_tdrx0z",
+    "CBO-COUPLE-CGG": "prd_tdrx0z",
+
+    "ABO-PACK-ELOQ": "prd_umqgm8su",
+    "ABO-PACK-ELOQ - BROAD": "prd_umqgm8su",
+
+    "CBO-IA": "prd_gcozed"
   }
 }
