@@ -1,4 +1,4 @@
-import type { SaleRecord } from "./types";
+import type { PurchaseAttempt, SaleRecord } from "./types";
 
 const API_BASE = "https://api.chariow.com/v1";
 
@@ -12,11 +12,25 @@ interface ChariowAmount {
   currency?: string;
 }
 
+interface ChariowCustomer {
+  name?: string | null;
+  email?: string | null;
+  phone?: {
+    number?: number | string | null;
+    country?: {
+      name?: string | null;
+      code?: string | null;
+      dial_code?: string | null;
+    } | null;
+  } | null;
+}
+
 interface ChariowSale {
   id: string;
   status: string;
   amount: ChariowAmount | null;
   original_amount: ChariowAmount | null;
+  customer?: ChariowCustomer | null;
   // `settlement` et `context` sont absents de la réponse REST : seul le
   // connecteur MCP les renvoie. Déclarés optionnels pour refléter la réalité
   // du contrat, et non la documentation.
@@ -24,7 +38,14 @@ interface ChariowSale {
     amount: ChariowAmount | null;
     service_fee: ChariowAmount | null;
   } | null;
-  payment?: { fee?: ChariowAmount | null } | null;
+  payment?: {
+    fee?: ChariowAmount | null;
+    amount?: ChariowAmount | null;
+    failure_error?: {
+      code?: string | null;
+      customer_message?: string | null;
+    } | null;
+  } | null;
   product: { id: string; name: string } | null;
   context?: { country: { name: string } | null } | null;
   completed_at: string | null;
@@ -160,13 +181,12 @@ function normalize(sale: ChariowSale, netRate: number): SaleRecord | null {
  * Le garde-fou à 50 pages évite qu'une pagination cassée ne boucle
  * indéfiniment sur un serveur de production.
  */
-export async function fetchSales(
+async function fetchRawSales(
   from: string,
   to: string,
   apiKey: string,
-): Promise<SaleRecord[]> {
-  const sales: SaleRecord[] = [];
-  const netRate = getNetRate();
+): Promise<ChariowSale[]> {
+  const all: ChariowSale[] = [];
   let cursor: string | null = null;
   let pages = 0;
 
@@ -203,14 +223,7 @@ export async function fetchSales(
 
     const payload = (await response.json()) as ChariowListResponse;
 
-    for (const sale of payload.data ?? []) {
-      const record = normalize(sale, netRate);
-      // Comparaison lexicographique sur des dates ISO : correcte, et sans
-      // conversion en objet Date qui réintroduirait un fuseau horaire.
-      if (record && record.date >= from && record.date <= to) {
-        sales.push(record);
-      }
-    }
+    for (const sale of payload.data ?? []) all.push(sale);
 
     const hasMore =
       payload.pagination?.has_more ?? payload.pagination?.has_more_pages ?? false;
@@ -218,5 +231,73 @@ export async function fetchSales(
     pages += 1;
   } while (cursor && pages < 50);
 
+  return all;
+}
+
+/** Ventes réellement encaissées de la période. */
+export async function fetchSales(
+  from: string,
+  to: string,
+  apiKey: string,
+): Promise<SaleRecord[]> {
+  const netRate = getNetRate();
+  const sales: SaleRecord[] = [];
+
+  for (const sale of await fetchRawSales(from, to, apiKey)) {
+    const record = normalize(sale, netRate);
+    // Comparaison lexicographique sur des dates ISO : correcte, et sans
+    // conversion en objet Date qui réintroduirait un fuseau horaire.
+    if (record && record.date >= from && record.date <= to) sales.push(record);
+  }
   return sales;
+}
+
+/**
+ * Toutes les tentatives d'achat de la période, abouties ou non.
+ *
+ * La date retenue est celle de **création**, et non de finalisation : une
+ * tentative échouée n'a jamais de `completed_at`. Se fier à ce champ ferait
+ * disparaître du tunnel précisément ce qu'il sert à mesurer.
+ */
+export async function fetchAttempts(
+  from: string,
+  to: string,
+  apiKey: string,
+): Promise<PurchaseAttempt[]> {
+  const attempts: PurchaseAttempt[] = [];
+
+  for (const sale of await fetchRawSales(from, to, apiKey)) {
+    const timestamp = sale.created_at ?? sale.completed_at;
+    if (!timestamp) continue;
+
+    const date = toUtcDay(timestamp);
+    if (date < from || date > to) continue;
+
+    const phone = sale.customer?.phone;
+    const hasContact = Boolean(sale.customer?.email || phone?.number);
+
+    attempts.push({
+      id: sale.id,
+      date,
+      createdAt: timestamp,
+      status: sale.status,
+      productId: sale.product?.id ?? "inconnu",
+      productName: sale.product?.name ?? "Produit inconnu",
+      amountXof: sale.amount?.value ?? 0,
+      paymentCurrency: sale.payment?.amount?.currency ?? null,
+      failureCode: sale.payment?.failure_error?.code ?? null,
+      failureMessage: sale.payment?.failure_error?.customer_message ?? null,
+      customer: hasContact
+        ? {
+            name: sale.customer?.name ?? null,
+            email: sale.customer?.email ?? null,
+            phone: phone?.number ? String(phone.number) : null,
+            countryName: phone?.country?.name ?? null,
+            countryCode: phone?.country?.code ?? null,
+          }
+        : null,
+    });
+  }
+
+  return attempts;
 }

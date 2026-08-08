@@ -8,6 +8,19 @@ import {
 } from "@/lib/auth";
 
 /**
+ * Chemins servis sans authentification. Liste fermée et explicite : un motif
+ * générique laisserait passer une future route par inadvertance.
+ */
+const PUBLIC_ASSETS = new Set([
+  "/manifest.webmanifest",
+  "/sw.js",
+  "/offline",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-512.png",
+]);
+
+/**
  * Garde d'accès du tableau de bord.
  *
  * En Next.js 16, `middleware.ts` a été renommé en `proxy.ts` : ce fichier est
@@ -23,6 +36,12 @@ export async function proxy(request: NextRequest) {
   // La page de connexion et son action doivent rester accessibles, sans quoi
   // la redirection tournerait en boucle.
   if (pathname.startsWith("/login")) return NextResponse.next();
+
+  // Ressources d'installation. Le navigateur récupère le manifeste et les
+  // icônes hors session, parfois sans cookies : les rediriger vers la page de
+  // connexion ferait silencieusement échouer l'installation de l'application.
+  // Aucune ne divulgue de donnée, ce sont des images et un fichier descriptif.
+  if (PUBLIC_ASSETS.has(pathname)) return NextResponse.next();
 
   const expected = expectedCredentials();
 
@@ -53,5 +72,9 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // Tout sauf les ressources statiques, dont le blocage casserait l'affichage
   // de la page de connexion elle-même.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Les icônes générées par convention (`icon`, `apple-icon`) portent une URL
+  // à hachage : on les exclut ici, le contrôle fin se faisant plus haut.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icon\\?|apple-icon\\?).*)",
+  ],
 };

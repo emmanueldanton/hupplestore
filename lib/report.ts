@@ -1,5 +1,6 @@
 import { buildReport } from "./attribution";
-import { fetchSales, getNetRate } from "./chariow";
+import { fetchAttempts, fetchSales, getNetRate } from "./chariow";
+import { buildFunnel, type FunnelReport } from "./funnel";
 import { fetchAdSpend } from "./meta";
 import { loadCampaignMap, loadConfig, ConfigError } from "./config";
 import { resolvePeriod, type PeriodKey } from "./period";
@@ -35,6 +36,74 @@ export interface DashboardData {
 
 function emptyReport(from: string, to: string): ProfitabilityReport {
   return buildReport({ from, to, sales: [], spend: [], campaignMap: {} });
+}
+
+export interface FunnelData {
+  current: FunnelReport;
+  previous: FunnelReport;
+  fatal: string | null;
+}
+
+/**
+ * Charge le tunnel de paiement sur la période, et la précédente pour comparer.
+ *
+ * Ne dépend que de Chariow : une panne côté Meta n'a aucun effet ici.
+ */
+export async function loadFunnel(period: PeriodKey): Promise<FunnelData> {
+  const { current, previous } = resolvePeriod(period);
+
+  let config;
+  try {
+    config = loadConfigForChariow();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Configuration illisible.";
+    const empty = (from: string, to: string) =>
+      buildFunnel({ from, to, attempts: [] });
+    return {
+      current: empty(current.from, current.to),
+      previous: empty(previous.from, previous.to),
+      fatal: message,
+    };
+  }
+
+  try {
+    const attempts = await fetchAttempts(previous.from, current.to, config);
+    return {
+      current: buildFunnel({
+        from: current.from,
+        to: current.to,
+        attempts: attempts.filter((a) => a.date >= current.from),
+      }),
+      previous: buildFunnel({
+        from: previous.from,
+        to: previous.to,
+        attempts: attempts.filter((a) => a.date < current.from),
+      }),
+      fatal: null,
+    };
+  } catch (error) {
+    const empty = (from: string, to: string) =>
+      buildFunnel({ from, to, attempts: [] });
+    return {
+      current: empty(current.from, current.to),
+      previous: empty(previous.from, previous.to),
+      fatal: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+/**
+ * Le tunnel n'a besoin que de la clé Chariow : exiger aussi les identifiants
+ * Meta le rendrait indisponible pour une raison qui ne le concerne pas.
+ */
+function loadConfigForChariow(): string {
+  const key = process.env.CHARIOW_API_KEY;
+  if (!key) {
+    throw new Error(
+      "Configuration incomplète. Renseigne CHARIOW_API_KEY dans les variables d'environnement.",
+    );
+  }
+  return key;
 }
 
 /**
