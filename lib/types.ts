@@ -79,6 +79,12 @@ export interface CampaignPerformance {
   /** Produits rattachés via config/campaign-map.json. Vide = non mappée. */
   productIds: string[];
   isMapped: boolean;
+  /**
+   * false pour une campagne active qui n'a encore servi aucune impression sur
+   * la période. Sans cette distinction, elle serait indiscernable d'une
+   * campagne à l'arrêt, alors qu'elle vient peut-être d'être lancée.
+   */
+  hasDelivery: boolean;
   spendXof: number;
   impressions: number;
   clicks: number;

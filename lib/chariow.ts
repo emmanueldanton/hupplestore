@@ -205,7 +205,9 @@ async function fetchRawSales(
 
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${apiKey}` },
-      next: { revalidate: 900, tags: ["chariow"] },
+      // Une minute, et non quinze. Un quart d'heure de latence faisait passer
+      // une campagne qui vient de démarrer pour une campagne absente.
+      next: { revalidate: 60, tags: ["chariow"] },
     });
 
     if (response.status === 401) {

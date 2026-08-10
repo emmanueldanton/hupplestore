@@ -231,6 +231,9 @@ export async function loadDashboard(
   const currency =
     spendNow.status === "fulfilled" ? spendNow.value.accountCurrency : null;
 
+  const activeCampaigns =
+    spendNow.status === "fulfilled" ? spendNow.value.activeCampaigns : [];
+
   const report = buildReport({
     from: current.from,
     to: current.to,
@@ -238,6 +241,7 @@ export async function loadDashboard(
     spend: spendCurrent,
     campaignMap,
     adAccountCurrency: currency,
+    activeCampaigns,
     attributionWindowDays,
   });
 

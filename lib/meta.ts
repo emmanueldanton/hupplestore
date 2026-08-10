@@ -30,9 +30,60 @@ export class MetaError extends Error {
   }
 }
 
+export interface MetaCampaign {
+  id: string;
+  name: string;
+}
+
 export interface MetaInsightsResult {
   records: AdSpendRecord[];
   accountCurrency: string | null;
+  /**
+   * Campagnes actuellement actives, diffusion ou non.
+   *
+   * L'endpoint Insights ne renvoie une ligne que si la campagne a servi au
+   * moins une impression. Une campagne lancée il y a une heure est donc
+   * totalement absente des performances, ce qui donne l'impression que
+   * l'application ne la voit pas. On récupère la structure séparément pour
+   * qu'elle apparaisse, à zéro, plutôt que de disparaître.
+   */
+  activeCampaigns: MetaCampaign[];
+}
+
+interface CampaignRow {
+  id?: string;
+  name?: string;
+  effective_status?: string;
+}
+
+/** Campagnes en cours de diffusion selon la structure du compte. */
+async function fetchActiveCampaigns(
+  accountId: string,
+  version: string,
+  accessToken: string,
+): Promise<MetaCampaign[]> {
+  const url = new URL(
+    `https://graph.facebook.com/${version}/${accountId}/campaigns`,
+  );
+  url.searchParams.set("fields", "id,name,effective_status");
+  url.searchParams.set("limit", "200");
+  url.searchParams.set("access_token", accessToken);
+
+  const response = await fetch(url, {
+    next: { revalidate: 60, tags: ["meta"] },
+  });
+  const payload = (await response.json()) as {
+    data?: CampaignRow[];
+    error?: { message: string };
+  };
+
+  // Un échec ici ne doit pas priver l'utilisateur de ses performances : la
+  // structure n'est qu'un complément.
+  if (payload.error || !payload.data) return [];
+
+  return payload.data
+    .filter((c) => c.effective_status === "ACTIVE" && c.id && c.name)
+    .map((c) => ({ id: c.id!, name: c.name! }));
 }
 
 /**
@@ -81,7 +132,7 @@ export async function fetchAdSpend(
 
   while (next && pages < 50) {
     const response: Response = await fetch(next, {
-      next: { revalidate: 900, tags: ["meta"] },
+      next: { revalidate: 60, tags: ["meta"] },
     });
 
     const payload = (await response.json()) as MetaInsightsResponse;
@@ -124,5 +175,11 @@ export async function fetchAdSpend(
     pages += 1;
   }
 
-  return { records, accountCurrency };
+  const activeCampaigns = await fetchActiveCampaigns(
+    accountId,
+    version,
+    options.accessToken,
+  );
+
+  return { records, accountCurrency, activeCampaigns };
 }

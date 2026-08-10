@@ -24,13 +24,18 @@ function normalizeMap(map: CampaignMap): Map<string, string[]> {
   return out;
 }
 
+/**
+ * Prend l'identité de la campagne plutôt qu'une ligne de dépense complète :
+ * une campagne active sans diffusion doit pouvoir être mappée elle aussi,
+ * et elle n'a par définition aucune dépense à présenter.
+ */
 function lookupProducts(
   map: Map<string, string[]>,
-  record: AdSpendRecord,
+  campaign: { campaignId: string; campaignName: string },
 ): string[] {
   return (
-    map.get(record.campaignName.trim().toLowerCase()) ??
-    map.get(record.campaignId.trim().toLowerCase()) ??
+    map.get(campaign.campaignName.trim().toLowerCase()) ??
+    map.get(campaign.campaignId.trim().toLowerCase()) ??
     []
   );
 }
@@ -81,6 +86,11 @@ export function buildReport(params: {
   campaignMap: CampaignMap;
   adAccountCurrency?: string | null;
   /**
+   * Campagnes actives selon la structure du compte. Celles qui n'ont pas
+   * encore diffusé sont ajoutées à zéro, pour qu'un lancement récent se voie.
+   */
+  activeCampaigns?: { id: string; name: string }[];
+  /**
    * Nombre de jours pendant lesquels une dépense peut revendiquer une vente.
    * 0 signifie le jour même uniquement. Voir la note sur la sensibilité dans
    * la documentation : si le classement des campagnes change selon cette
@@ -124,6 +134,21 @@ export function buildReport(params: {
     } else {
       day.set(record.campaignId, { ...record });
     }
+  }
+
+  // Campagnes actives n'ayant pas encore diffusé : elles n'apparaissent dans
+  // aucune ligne d'insights, et resteraient donc invisibles.
+  for (const active of params.activeCampaigns ?? []) {
+    if (campaignInfo.has(active.id)) continue;
+    const products = lookupProducts(map, {
+      campaignId: active.id,
+      campaignName: active.name,
+    });
+    campaignInfo.set(active.id, {
+      name: active.name,
+      products,
+      isMapped: products.length > 0,
+    });
   }
 
   // ── Accumulateurs ───────────────────────────────────────────────────────
@@ -283,6 +308,7 @@ export function buildReport(params: {
         campaignName: info.name,
         productIds: info.products,
         isMapped: info.isMapped,
+        hasDelivery: totals.impressions > 0 || totals.spendXof > 0,
         spendXof: totals.spendXof,
         impressions: totals.impressions,
         clicks: totals.clicks,

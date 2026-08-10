@@ -238,6 +238,64 @@ describe("buildReport : fenêtre d'attribution", () => {
   });
 });
 
+describe("buildReport : campagnes sans diffusion", () => {
+  it("affiche une campagne active qui n'a encore rien diffusé", () => {
+    // Cas vécu : une campagne lancée dans la nuit, aucune impression au
+    // moment de la consultation. L'endpoint Insights ne renvoie alors aucune
+    // ligne, et la campagne semblait ne pas exister.
+    const report = buildReport({
+      ...range,
+      sales: [],
+      spend: [],
+      campaignMap: {},
+      activeCampaigns: [{ id: "c9", name: "CBO-NON" }],
+    });
+
+    expect(report.campaigns).toHaveLength(1);
+    expect(report.campaigns[0].campaignName).toBe("CBO-NON");
+    expect(report.campaigns[0].hasDelivery).toBe(false);
+    expect(report.campaigns[0].spendXof).toBe(0);
+  });
+
+  it("marque comme diffusée une campagne ayant consommé du budget", () => {
+    const report = buildReport({
+      ...range,
+      sales: [],
+      spend: [spend({ campaignId: "c1", spendXof: 500, impressions: 120 })],
+      campaignMap: {},
+      activeCampaigns: [{ id: "c1", name: "Campagne A" }],
+    });
+
+    expect(report.campaigns).toHaveLength(1);
+    expect(report.campaigns[0].hasDelivery).toBe(true);
+  });
+
+  it("ne duplique pas une campagne présente des deux côtés", () => {
+    const report = buildReport({
+      ...range,
+      sales: [],
+      spend: [spend({ campaignId: "c1", campaignName: "Campagne A" })],
+      campaignMap: {},
+      activeCampaigns: [{ id: "c1", name: "Campagne A" }],
+    });
+
+    expect(report.campaigns).toHaveLength(1);
+  });
+
+  it("mappe une campagne sans diffusion comme les autres", () => {
+    const report = buildReport({
+      ...range,
+      sales: [],
+      spend: [],
+      campaignMap: { "CBO-NON": "prd_a" },
+      activeCampaigns: [{ id: "c9", name: "CBO-NON" }],
+    });
+
+    expect(report.campaigns[0].isMapped).toBe(true);
+    expect(report.unmappedCampaignNames).toEqual([]);
+  });
+});
+
 describe("buildReport : qualification statistique", () => {
   it("refuse de conclure sur une campagne à faible trafic", () => {
     const report = buildReport({

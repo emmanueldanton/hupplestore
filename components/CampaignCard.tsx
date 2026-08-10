@@ -25,7 +25,11 @@ export function CampaignCard({ campaign }: { campaign: CampaignPerformance }) {
             {campaign.campaignName}
           </p>
           <p className="mt-1 text-[0.72rem] leading-relaxed text-ink-muted">
-            {campaign.isMapped ? (
+            {!campaign.hasDelivery ? (
+              <span className="text-alert">
+                Active, aucune diffusion sur la période
+              </span>
+            ) : campaign.isMapped ? (
               <>
                 {formatInt(campaign.clicks)} clic
                 {campaign.clicks > 1 ? "s" : ""} ·{" "}
