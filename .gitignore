@@ -35,6 +35,13 @@ yarn-error.log*
 # Le modèle ne contient aucun secret et doit rester versionné.
 !.env.example
 
+# Documents de travail : specifications, conception, methodologie.
+# Le depot ne contient que le code. Ces documents restent en local, ils
+# exposeraient chiffres d'affaires et arbitrages internes sans servir a qui
+# consulte le code. Le README fait exception : il sert a faire tourner le
+# projet.
+/docs
+
 # vercel
 .vercel
 
