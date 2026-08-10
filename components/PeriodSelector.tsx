@@ -29,9 +29,14 @@ export function PeriodSelector({
 
   return (
     <div className="w-full lg:w-auto">
+      {/*
+       * `relative` est porté par la barre entière, et non par le segment
+       * « Perso ». Le panneau s'ancre ainsi sur toute la largeur du sélecteur :
+       * ancré sur un segment de soixante pixels, il débordait de l'écran.
+       */}
       <nav
         aria-label="Période d'analyse"
-        className="flex w-full items-stretch gap-0.5 rounded-[var(--radius-pill)] bg-black/20 p-1 lg:w-auto"
+        className="relative flex w-full items-stretch gap-0.5 rounded-[var(--radius-pill)] bg-black/20 p-1 lg:w-auto"
       >
         {(Object.keys(PERIODS) as PeriodKey[]).map((key) => {
           const actif = key === period.key;
@@ -50,9 +55,11 @@ export function PeriodSelector({
           );
         })}
 
-        <details className="group relative flex-1 lg:flex-none">
+        {/* `summary` doit rester enfant direct de `details` : imbriqué plus
+            profond, le navigateur ne le reconnaît plus et masque le contenu. */}
+        <details className="group flex-1 lg:flex-none">
           <summary
-            className={`flex cursor-pointer list-none items-center justify-center gap-1 rounded-[var(--radius-pill)] px-2.5 py-1.5 text-[0.76rem] font-semibold transition-colors lg:px-3.5 ${
+            className={`flex h-full cursor-pointer list-none items-center justify-center gap-1 rounded-[var(--radius-pill)] px-2.5 py-1.5 text-[0.76rem] font-semibold transition-colors lg:px-3.5 ${
               perso ? "bg-white text-ink shadow-sm" : "text-white/65 hover:text-white"
             }`}
           >
@@ -65,7 +72,7 @@ export function PeriodSelector({
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="h-3 w-3 transition-transform group-open:rotate-180"
+              className="h-3 w-3 shrink-0 transition-transform group-open:rotate-180"
             >
               <path d="M6 9l6 6 6-6" />
             </svg>
@@ -74,39 +81,42 @@ export function PeriodSelector({
           <form
             method="get"
             action="/periode"
-            className="absolute right-0 z-30 mt-2 w-[17rem] rounded-[var(--radius-card)] border border-hairline bg-surface p-4 shadow-lg"
+            className="absolute inset-x-0 top-full z-30 mt-2 rounded-[var(--radius-card)] border border-hairline bg-surface p-4 shadow-lg lg:inset-x-auto lg:right-0 lg:w-[19rem]"
           >
             <input type="hidden" name="period" value="custom" />
             <input type="hidden" name="next" value={basePath} />
 
-            <div className="flex flex-col gap-3">
-              <label className="flex flex-col gap-1">
+            {/* Deux colonnes : les champs de date natifs sont larges, empilés
+                ils allongeaient un panneau déjà flottant. */}
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex min-w-0 flex-col gap-1">
                 <span className="text-[0.7rem] font-medium text-ink-muted">Du</span>
                 <input
                   type="date"
                   name="from"
                   required
                   defaultValue={period.from}
-                  className="w-full rounded-lg border border-hairline bg-surface-sunken px-3 py-2 text-[0.85rem] text-ink outline-none focus:border-ink/30"
+                  className="w-full min-w-0 rounded-lg border border-hairline bg-surface-sunken px-2.5 py-2 text-[0.8rem] text-ink outline-none focus:border-ink/30"
                 />
               </label>
-              <label className="flex flex-col gap-1">
+              <label className="flex min-w-0 flex-col gap-1">
                 <span className="text-[0.7rem] font-medium text-ink-muted">Au</span>
                 <input
                   type="date"
                   name="to"
                   required
                   defaultValue={period.to}
-                  className="w-full rounded-lg border border-hairline bg-surface-sunken px-3 py-2 text-[0.85rem] text-ink outline-none focus:border-ink/30"
+                  className="w-full min-w-0 rounded-lg border border-hairline bg-surface-sunken px-2.5 py-2 text-[0.8rem] text-ink outline-none focus:border-ink/30"
                 />
               </label>
-              <button
-                type="submit"
-                className="mt-1 w-full rounded-lg bg-ink px-3 py-2.5 text-[0.82rem] font-semibold text-white transition-opacity hover:opacity-90"
-              >
-                Appliquer
-              </button>
             </div>
+
+            <button
+              type="submit"
+              className="mt-3 w-full rounded-lg bg-ink px-3 py-2.5 text-[0.82rem] font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Appliquer
+            </button>
           </form>
         </details>
       </nav>

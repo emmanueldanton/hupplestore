@@ -10,12 +10,13 @@
   ],
 
   "_produits_disponibles": {
+    "prd_ldghh81q": "Dire NON Sans Culpabiliser",
     "prd_4qpa9s": "Deviens l'Orateur qu'on Écoute, 3 900 F, 149 ventes",
     "prd_qgn2mj": "92 Techniques pour Engager la Conversation, 3 900 F, 47 ventes",
     "prd_0m2vfj": "L'Art Oratoire : Parlez avec Autorité, 3 900 F, 31 ventes",
     "prd_umqgm8su": "Le Pack Orateur Complet (bundle), 4 999 F, 6 ventes",
     "prd_gcozed": "Lancer et Monétiser un Influenceur IA, 4 900 F, 4 ventes",
-    "prd_tdrx0z": "Raviver votre relation amoureuse, 1 900 F, 1 vente",
+    "prd_tdrx0z": "Jeu de couple en intimité, 1 900 F, 1 vente",
     "prd_sgbovr": "Deviens Plus Éloquent en 15 Jours V2.0, 1 vente",
     "prd_5qby7y": "La Science de la Richesse + MyFinanx, 4 900 F",
     "prd_xv18ufmo": "Mon Enfant Ose Parler, 2 200 F, aucune vente",
@@ -23,7 +24,7 @@
   },
 
   "_a_verifier": [
-    "Cinq campagnes sont volontairement laissées hors de la table, faute de",
+    "Ces campagnes restent volontairement hors de la table, faute de",
     "certitude sur le produit qu'elles poussent. Elles apparaîtront en",
     "'Non mappée' : leur dépense est comptée, aucun revenu ne leur est attribué.",
     "",
@@ -33,12 +34,16 @@
     "  CBO-ELOQ-JR       16 861 F  'JR' pour junior ? Mon Enfant Ose Parler ?",
     "  CBO-EBOOKS        15 855 F  plusieurs produits ?",
     "",
-    "Cela représente 242 000 F de dépense, soit 34 % du total : tant que ces",
-    "cinq lignes ne sont pas renseignées, un tiers du budget reste inexpliqué.",
-    "Complète-les dans le bloc 'mapping' ci-dessous et supprime-les d'ici."
+    "Tant que ces lignes ne sont pas renseignées, leur budget reste inexpliqué.",
+    "Complète-les dans le bloc 'mapping' ci-dessous et supprime-les d'ici.",
+    "",
+    "prd_sgbovr et prd_pjgvz5 n'apparaissent plus au catalogue : ils restent",
+    "listés car des ventes passées y font référence."
   ],
 
   "mapping": {
+    "CBO-NON": "prd_ldghh81q",
+
     "CBO-DP - ELOQ": "prd_4qpa9s",
     "CBO-ELOQUENCE": "prd_4qpa9s",
     "ABO-ELOQUENCE": "prd_4qpa9s",
