@@ -5,7 +5,7 @@ import { Notice } from "@/components/Notice";
 import { OpportunityCalculator } from "@/components/OpportunityCalculator";
 import { formatPercent, formatRoas, formatXof } from "@/lib/money";
 import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
-import { loadDashboard } from "@/lib/report";
+import { loadDashboard, loadFunnel } from "@/lib/report";
 import { judgePrice, unitEconomicsFromReport } from "@/lib/threshold";
 
 export const metadata = {
@@ -22,8 +22,21 @@ export default async function VeillePage({ searchParams }: PageProps<"/veille">)
   const raw = Array.isArray(params.period) ? params.period[0] : params.period;
   const period = isPeriodKey(raw) ? raw : DEFAULT_PERIOD;
 
-  const { current, fatal } = await loadDashboard(period);
+  const [{ current, fatal }, funnel] = await Promise.all([
+    loadDashboard(period),
+    loadFunnel(period),
+  ]);
   const eco = unitEconomicsFromReport(current);
+
+  // Déduit des ventes réelles, et non d'une liste écrite en dur qu'il faudrait
+  // redéployer pour corriger. Le marché se déplace ; le code ne devrait pas
+  // avoir à suivre.
+  const marches = funnel.current.byCountry
+    .filter((pays) => pays.paid > 0 && pays.key !== "Inconnu")
+    .sort((a, b) => b.paid - a.paid)
+    .slice(0, 4)
+    .map((pays) => `${pays.label} (${pays.paid})`)
+    .join(" · ");
 
   return (
     <>
@@ -145,14 +158,13 @@ export default async function VeillePage({ searchParams }: PageProps<"/veille">)
           </a>
 
           <dl className="mt-5 flex flex-col gap-3">
-            <Repere terme="Marchés">
-              Côte d&apos;Ivoire, RDC, Cameroun, Guinée
+            <Repere terme="Tes marchés">
+              {marches.length > 0
+                ? marches
+                : "Pas encore assez de ventes pour identifier un marché"}
             </Repere>
             <Repere terme="Signal">
               Diffusion de plus de 30 jours, la publicité est rentable
-            </Repere>
-            <Repere terme="Concurrents">
-              OverMarket 570 j · Savoir Hub 216 j · Équipe Bien Être 209 j
             </Repere>
           </dl>
 

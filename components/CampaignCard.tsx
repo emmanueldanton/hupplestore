@@ -13,7 +13,14 @@ import type { CampaignPerformance } from "@/lib/types";
  * L'ordre est délibéré : le verdict d'abord, puisque c'est la seule chose qui
  * appelle une décision, puis la marge, puis le détail.
  */
-export function CampaignCard({ campaign }: { campaign: CampaignPerformance }) {
+export function CampaignCard({
+  campaign,
+  unstable,
+}: {
+  campaign: CampaignPerformance;
+  /** Verdict qui change selon le délai supposé entre le clic et l'achat. */
+  unstable?: boolean;
+}) {
   const { confidence } = campaign;
   const isLoss = campaign.marginXof < 0;
 
@@ -48,7 +55,14 @@ export function CampaignCard({ campaign }: { campaign: CampaignPerformance }) {
         {/* Pastille seule ici : la probabilité en toutes lettres prenait la
             moitié de la largeur et coupait les noms de campagne en deux. Elle
             est reprise en pied de carte, où la place ne manque pas. */}
-        <VerdictBadge verdict={confidence.verdict} />
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <VerdictBadge verdict={confidence.verdict} />
+          {unstable && (
+            <span className="text-[0.66rem] whitespace-nowrap text-alert">
+              résultat fragile
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Deux colonnes sur téléphone, quatre dès la tablette : au delà de

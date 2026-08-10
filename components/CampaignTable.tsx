@@ -15,13 +15,20 @@ import type { CampaignPerformance } from "@/lib/types";
  */
 export function CampaignTable({
   campaigns,
+  unstable,
 }: {
   campaigns: CampaignPerformance[];
+  /**
+   * Campagnes dont le verdict change selon le délai suppose entre le clic et
+   * l'achat. L'information vit ici, sur la ligne concernée, plutôt que dans
+   * un tableau comparatif séparé que personne ne savait lire.
+   */
+  unstable?: Set<string>;
 }) {
   if (campaigns.length === 0) {
     return (
       <p className="text-[0.88rem] text-ink-muted">
-        Aucune campagne n&apos;a enregistré de dépense sur cette période.
+        Aucune campagne active sur cette période.
       </p>
     );
   }
@@ -32,7 +39,11 @@ export function CampaignTable({
           change de mise en page plutôt que de forcer un défilement latéral. */}
       <ul className="flex flex-col gap-3 lg:hidden">
         {campaigns.map((campaign) => (
-          <CampaignCard key={campaign.campaignId} campaign={campaign} />
+          <CampaignCard
+            key={campaign.campaignId}
+            campaign={campaign}
+            unstable={unstable?.has(campaign.campaignId)}
+          />
         ))}
       </ul>
 
@@ -131,6 +142,11 @@ export function CampaignTable({
                     verdict={confidence.verdict}
                     probability={confidence.probabilityProfitable}
                   />
+                  {unstable?.has(campaign.campaignId) && (
+                    <div className="mt-1 text-[0.68rem] whitespace-nowrap text-alert">
+                      résultat fragile
+                    </div>
+                  )}
                   {confidence.clicksNeededToConclude !== null && (
                     <div className="mt-1 text-[0.68rem] whitespace-nowrap text-ink-muted">
                       ~{formatInt(confidence.clicksNeededToConclude)} clics de

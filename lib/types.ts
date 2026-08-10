@@ -85,6 +85,8 @@ export interface CampaignPerformance {
    * campagne à l'arrêt, alors qu'elle vient peut-être d'être lancée.
    */
   hasDelivery: boolean;
+  /** true si la campagne tourne actuellement, selon la structure du compte. */
+  isActive: boolean;
   spendXof: number;
   impressions: number;
   clicks: number;
@@ -163,6 +165,12 @@ export interface ProfitabilityReport {
   unattributed: Unattributed;
   /** Campagnes présentes chez Meta mais absentes de campaign-map.json. */
   unmappedCampaignNames: string[];
+  /**
+   * false quand Meta n'a pas su dire quelles campagnes tournent. Sans cette
+   * distinction, un échec de l'appel se traduirait par une liste vide, et
+   * l'utilisateur croirait n'avoir aucune campagne active.
+   */
+  activeCampaignsKnown: boolean;
   /** true si au moins une vente a un net recalculé plutôt que constaté. */
   hasEstimatedNet: boolean;
   /** Devise du compte publicitaire Meta, pour information. */

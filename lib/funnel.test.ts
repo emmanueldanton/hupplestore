@@ -206,6 +206,43 @@ describe("buildFunnel : segments", () => {
     expect(report.byCurrency.map((c) => c.key)).toEqual(["XOF"]);
   });
 
+  it("déduit les marchés du pays de l'acheteur", () => {
+    // Remplace une liste de pays écrite en dur, qui exigeait un déploiement
+    // pour suivre le déplacement du marché.
+    const report = buildFunnel({
+      ...range,
+      attempts: [
+        attempt({
+          id: "1",
+          status: "settled",
+          customer: { name: null, email: "a@b.c", phone: null, countryName: "Cameroun", countryCode: "CM" },
+        }),
+        attempt({
+          id: "2",
+          status: "settled",
+          customer: { name: null, email: "d@e.f", phone: null, countryName: "Cameroun", countryCode: "CM" },
+        }),
+        attempt({
+          id: "3",
+          status: "settled",
+          customer: { name: null, email: "g@h.i", phone: null, countryName: "Guinée", countryCode: "GN" },
+        }),
+      ],
+    });
+
+    expect(report.byCountry[0].label).toBe("Cameroun");
+    expect(report.byCountry[0].paid).toBe(2);
+    expect(report.byCountry.find((p) => p.label === "Guinée")?.paid).toBe(1);
+  });
+
+  it("range sous Inconnu les acheteurs sans pays", () => {
+    const report = buildFunnel({
+      ...range,
+      attempts: [attempt({ status: "settled", customer: null })],
+    });
+    expect(report.byCountry[0].label).toBe("Inconnu");
+  });
+
   it("sépare par devise de paiement, ce qui révèle le rail défaillant", () => {
     const report = buildFunnel({
       ...range,

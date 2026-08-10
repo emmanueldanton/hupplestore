@@ -282,6 +282,39 @@ describe("buildReport : campagnes sans diffusion", () => {
     expect(report.campaigns).toHaveLength(1);
   });
 
+  it("distingue les campagnes en cours de celles arrêtées", () => {
+    const report = buildReport({
+      ...range,
+      sales: [],
+      spend: [
+        spend({ campaignId: "c1", campaignName: "En cours" }),
+        spend({ campaignId: "c2", campaignName: "Arrêtée" }),
+      ],
+      campaignMap: {},
+      activeCampaigns: [{ id: "c1", name: "En cours" }],
+    });
+
+    const active = report.campaigns.find((c) => c.campaignId === "c1");
+    const arretee = report.campaigns.find((c) => c.campaignId === "c2");
+    expect(active?.isActive).toBe(true);
+    expect(arretee?.isActive).toBe(false);
+    expect(report.activeCampaignsKnown).toBe(true);
+  });
+
+  it("signale l'ignorance quand Meta ne renvoie aucune campagne active", () => {
+    // Sans ce drapeau, un echec de l'appel de structure ferait disparaitre
+    // toutes les campagnes de l'ecran, laissant croire qu'aucune ne tourne.
+    const report = buildReport({
+      ...range,
+      sales: [],
+      spend: [spend()],
+      campaignMap: {},
+    });
+
+    expect(report.activeCampaignsKnown).toBe(false);
+    expect(report.campaigns[0].isActive).toBe(false);
+  });
+
   it("mappe une campagne sans diffusion comme les autres", () => {
     const report = buildReport({
       ...range,

@@ -136,6 +136,8 @@ export function buildReport(params: {
     }
   }
 
+  const activeIds = new Set((params.activeCampaigns ?? []).map((c) => c.id));
+
   // Campagnes actives n'ayant pas encore diffusé : elles n'apparaissent dans
   // aucune ligne d'insights, et resteraient donc invisibles.
   for (const active of params.activeCampaigns ?? []) {
@@ -309,6 +311,7 @@ export function buildReport(params: {
         productIds: info.products,
         isMapped: info.isMapped,
         hasDelivery: totals.impressions > 0 || totals.spendXof > 0,
+        isActive: activeIds.has(campaignId),
         spendXof: totals.spendXof,
         impressions: totals.impressions,
         clicks: totals.clicks,
@@ -400,6 +403,7 @@ export function buildReport(params: {
     unmappedCampaignNames: campaigns
       .filter((c) => !c.isMapped && c.spendXof > 0)
       .map((c) => c.campaignName),
+    activeCampaignsKnown: activeIds.size > 0,
     hasEstimatedNet: sales.some((s) => s.netIsEstimated),
     adAccountCurrency: params.adAccountCurrency ?? null,
     attributionWindowDays: windowDays,

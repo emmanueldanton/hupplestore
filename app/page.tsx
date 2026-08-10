@@ -1,6 +1,5 @@
 import { Amount } from "@/components/Amount";
 import { AppHeader, HeaderStats } from "@/components/AppHeader";
-import { AttributionSensitivity } from "@/components/AttributionSensitivity";
 import { BottomNav } from "@/components/BottomNav";
 import { CampaignTable } from "@/components/CampaignTable";
 import { Explain } from "@/components/Explain";
@@ -9,7 +8,7 @@ import { Notice } from "@/components/Notice";
 import { ProductTable } from "@/components/ProductTable";
 import { SpendRevenueChart } from "@/components/SpendRevenueChart";
 import { TrendBadge } from "@/components/TrendBadge";
-import { computeDelta, formatInt, formatRoas } from "@/lib/money";
+import { computeDelta, formatInt, formatRoas, formatXof } from "@/lib/money";
 import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
 import { loadDashboard, SENSITIVITY_WINDOWS } from "@/lib/report";
 
@@ -45,6 +44,24 @@ export default async function Page({ searchParams }: PageProps<"/">) {
   // « tu gagnes de l'argent » sur une marge de 0 F serait un mensonge poli.
   const hasData = current.kpis.sales > 0 || current.kpis.spendXof > 0;
   const isProfitable = hasData && current.kpis.marginXof >= 0;
+
+  // Seules les campagnes qui tournent. Si Meta n'a pas su dire lesquelles, on
+  // montre tout : mieux vaut une liste trop longue qu'un écran vide qui
+  // laisserait croire qu'aucune campagne ne tourne.
+  const actives = current.activeCampaignsKnown
+    ? current.campaigns.filter((c) => c.isActive)
+    : current.campaigns;
+
+  // Les campagnes arrêtées ont tout de même consommé du budget sur la période.
+  // Le masquer creuserait un écart inexpliqué avec la dépense totale affichée
+  // plus haut.
+  const depenseEnPause = current.campaigns
+    .filter((c) => !c.isActive && c.spendXof > 0)
+    .reduce((total, c) => total + c.spendXof, 0);
+
+  const fragiles = new Set(
+    sensitivity.filter((row) => !row.stable).map((row) => row.campaignId),
+  );
 
   return (
     <>
@@ -168,35 +185,49 @@ export default async function Page({ searchParams }: PageProps<"/">) {
 
         {/* ── Campagnes ──────────────────────────────────────────────────── */}
         <section className="card mt-3 p-5 sm:p-6">
-          <h2 className="text-[0.9rem] font-semibold text-ink">Campagnes</h2>
-          <div className="mt-4">
-            <CampaignTable campaigns={current.campaigns} />
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-[0.9rem] font-semibold text-ink">
+              Campagnes actives
+            </h2>
+            <span className="text-[0.75rem] text-ink-muted">
+              {actives.length} en cours
+            </span>
           </div>
-          <Explain title="Pourquoi une fourchette de ROAS">
+
+          <div className="mt-4">
+            <CampaignTable campaigns={actives} unstable={fragiles} />
+          </div>
+
+          {depenseEnPause > 0 && (
+            <p className="mt-4 text-[0.75rem] text-ink-muted">
+              Les campagnes arrêtées ne sont pas listées, mais elles ont
+              consommé {formatXof(depenseEnPause)} sur la période, compris dans
+              la dépense totale.
+            </p>
+          )}
+
+          <Explain title="Comment lire une ligne">
             <p>
+              <strong className="text-ink-soft">La fourchette de ROAS.</strong>{" "}
               Sur de faibles volumes, un chiffre unique donnerait une fausse
               impression de certitude. Le verdict n&apos;est rendu qu&apos;au
               delà de 95 % de probabilité, dans un sens comme dans l&apos;autre.
             </p>
             <p>
-              Les campagnes sont triées par marge, et non par ROAS : un ROAS de
-              5× sur 2 000 F pèse moins qu&apos;un 1,4× sur 200 000 F.
+              <strong className="text-ink-soft">Résultat fragile.</strong> Rien
+              ne garantit qu&apos;un achat suive son clic le jour même. Le calcul
+              est rejoué en supposant 1, 3 puis 7 jours de délai. Quand le
+              verdict change d&apos;une hypothèse à l&apos;autre, la campagne
+              porte cette mention : son chiffre reflète alors l&apos;hypothèse
+              autant que la réalité, et ne doit pas fonder une décision de
+              budget.
+            </p>
+            <p>
+              <strong className="text-ink-soft">Le tri.</strong> Par marge, et
+              non par ROAS : un ROAS de 5× sur 2 000 F pèse moins qu&apos;un
+              1,4× sur 200 000 F.
             </p>
           </Explain>
-        </section>
-
-        {/* ── Robustesse ─────────────────────────────────────────────────── */}
-        <section className="card mt-3 p-5 sm:p-6">
-          <h2 className="text-[0.9rem] font-semibold text-ink">
-            Solidité du classement
-          </h2>
-          <div className="mt-4">
-            <AttributionSensitivity
-              rows={sensitivity}
-              activeWindow={windowDays}
-              period={period}
-            />
-          </div>
         </section>
 
         {/* ── Produits et non attribué ───────────────────────────────────── */}

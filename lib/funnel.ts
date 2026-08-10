@@ -135,6 +135,12 @@ export interface FunnelReport {
   byProduct: SegmentRow[];
   byCurrency: SegmentRow[];
   /**
+   * Répartition par pays de l'acheteur, déduite de l'indicatif téléphonique.
+   * Sert à savoir où se trouve réellement le marché, plutôt que de s'en
+   * remettre à une liste écrite en dur qu'il faudrait redéployer pour changer.
+   */
+  byCountry: SegmentRow[];
+  /**
    * Estimation prudente : uniquement les échecs techniques, valorisés en net.
    * Un plafond théorique, pas une prévision : rien ne garantit qu'un client
    * relancé réessaie.
@@ -187,6 +193,7 @@ export function buildFunnel(params: {
   const familyTotals = new Map<FailureFamily, { count: number; amount: number }>();
   const byProduct = new Map<string, SegmentRow>();
   const byCurrency = new Map<string, SegmentRow>();
+  const byCountry = new Map<string, SegmentRow>();
   const contacts: RecoveryContact[] = [];
 
   const touch = (
@@ -206,9 +213,12 @@ export function buildFunnel(params: {
     const product = touch(byProduct, attempt.productId, attempt.productName);
     const currencyKey = attempt.paymentCurrency ?? "inconnue";
     const currency = touch(byCurrency, currencyKey, currencyKey);
+    const paysNom = attempt.customer?.countryName ?? "Inconnu";
+    const pays = touch(byCountry, paysNom, paysNom);
 
     product.attempts += 1;
     currency.attempts += 1;
+    pays.attempts += 1;
 
     if (PAID.has(attempt.status)) {
       // Les ventes à 0 F sont des codes de test : elles ne disent rien de la
@@ -217,11 +227,13 @@ export function buildFunnel(params: {
       if (attempt.amountXof <= 0) {
         product.attempts -= 1;
         currency.attempts -= 1;
+        pays.attempts -= 1;
         continue;
       }
       paid += 1;
       product.paid += 1;
       currency.paid += 1;
+      pays.paid += 1;
       continue;
     }
 
@@ -229,9 +241,11 @@ export function buildFunnel(params: {
       abandoned += 1;
       product.abandoned += 1;
       currency.abandoned += 1;
+      pays.abandoned += 1;
       lostGrossXof += attempt.amountXof;
       product.lostXof += attempt.amountXof;
       currency.lostXof += attempt.amountXof;
+      pays.lostXof += attempt.amountXof;
       continue;
     }
 
@@ -243,9 +257,11 @@ export function buildFunnel(params: {
     failed += 1;
     product.failed += 1;
     currency.failed += 1;
+    pays.failed += 1;
     lostGrossXof += attempt.amountXof;
     product.lostXof += attempt.amountXof;
     currency.lostXof += attempt.amountXof;
+    pays.lostXof += attempt.amountXof;
 
     const { family, label } = classify(attempt.failureCode);
     const code = attempt.failureCode ?? "NON_RENSEIGNE";
@@ -315,6 +331,7 @@ export function buildFunnel(params: {
     causes: [...causes.values()].sort((a, b) => b.count - a.count),
     byProduct: finalizeSegments(byProduct),
     byCurrency: finalizeSegments(byCurrency),
+    byCountry: finalizeSegments(byCountry),
     recoverable: {
       count: technical.count,
       grossXof: technical.amount,
