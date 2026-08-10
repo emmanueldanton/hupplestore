@@ -4,7 +4,8 @@ import { Explain } from "@/components/Explain";
 import { Notice } from "@/components/Notice";
 import { OpportunityCalculator } from "@/components/OpportunityCalculator";
 import { formatPercent, formatRoas, formatXof } from "@/lib/money";
-import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
+import { cookies } from "next/headers";
+import { PERIOD_COOKIE, resolvePeriodFromParams } from "@/lib/period";
 import { loadDashboard, loadFunnel } from "@/lib/report";
 import { judgePrice, unitEconomicsFromReport } from "@/lib/threshold";
 
@@ -19,8 +20,8 @@ const RECHERCHE =
 
 export default async function VeillePage({ searchParams }: PageProps<"/veille">) {
   const params = await searchParams;
-  const raw = Array.isArray(params.period) ? params.period[0] : params.period;
-  const period = isPeriodKey(raw) ? raw : DEFAULT_PERIOD;
+  const memoire = (await cookies()).get(PERIOD_COOKIE)?.value;
+  const period = resolvePeriodFromParams(params, memoire);
 
   const [{ current, fatal }, funnel] = await Promise.all([
     loadDashboard(period),
@@ -186,7 +187,7 @@ export default async function VeillePage({ searchParams }: PageProps<"/veille">)
         </section>
       </main>
 
-      <BottomNav active="veille" period={period} />
+      <BottomNav active="veille" query={period.query} />
     </>
   );
 }

@@ -9,7 +9,8 @@ import { ProductTable } from "@/components/ProductTable";
 import { SpendRevenueChart } from "@/components/SpendRevenueChart";
 import { TrendBadge } from "@/components/TrendBadge";
 import { computeDelta, formatInt, formatRoas, formatXof } from "@/lib/money";
-import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
+import { cookies } from "next/headers";
+import { PERIOD_COOKIE, resolvePeriodFromParams } from "@/lib/period";
 import { loadDashboard, SENSITIVITY_WINDOWS } from "@/lib/report";
 
 export const metadata = {
@@ -18,8 +19,8 @@ export const metadata = {
 
 export default async function Page({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
-  const raw = Array.isArray(params.period) ? params.period[0] : params.period;
-  const period = isPeriodKey(raw) ? raw : DEFAULT_PERIOD;
+  const memoire = (await cookies()).get(PERIOD_COOKIE)?.value;
+  const period = resolvePeriodFromParams(params, memoire);
 
   const rawWindow = Array.isArray(params.window) ? params.window[0] : params.window;
   const parsedWindow = Number(rawWindow);
@@ -69,7 +70,6 @@ export default async function Page({ searchParams }: PageProps<"/">) {
         active="rentabilite"
         period={period}
         basePath="/"
-        windowDays={windowDays}
       >
         <HeaderStats
           label={
@@ -287,7 +287,7 @@ export default async function Page({ searchParams }: PageProps<"/">) {
         </div>
       </main>
 
-      <BottomNav active="rentabilite" period={period} />
+      <BottomNav active="rentabilite" query={period.query} />
     </>
   );
 }

@@ -5,7 +5,8 @@ import { Explain } from "@/components/Explain";
 import { Notice } from "@/components/Notice";
 import { RecoveryList } from "@/components/RecoveryList";
 import { FAMILY_LABELS } from "@/lib/funnel";
-import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
+import { cookies } from "next/headers";
+import { PERIOD_COOKIE, resolvePeriodFromParams } from "@/lib/period";
 import { loadFunnel } from "@/lib/report";
 
 export const metadata = {
@@ -23,8 +24,8 @@ export default async function RelancesPage({
   searchParams,
 }: PageProps<"/relances">) {
   const params = await searchParams;
-  const raw = Array.isArray(params.period) ? params.period[0] : params.period;
-  const period = isPeriodKey(raw) ? raw : DEFAULT_PERIOD;
+  const memoire = (await cookies()).get(PERIOD_COOKIE)?.value;
+  const period = resolvePeriodFromParams(params, memoire);
 
   const { current, fatal } = await loadFunnel(period);
 
@@ -110,7 +111,7 @@ export default async function RelancesPage({
         </section>
       </main>
 
-      <BottomNav active="relances" period={period} />
+      <BottomNav active="relances" query={period.query} />
     </>
   );
 }

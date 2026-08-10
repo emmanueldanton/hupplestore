@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { PeriodKey } from "@/lib/period";
+
 
 /**
  * Barre d'onglets fixe, affichée uniquement sur téléphone.
@@ -73,10 +73,11 @@ const TABS: {
 
 export function BottomNav({
   active,
-  period,
+  query,
 }: {
   active: Tab;
-  period: PeriodKey;
+  /** Chaine de requete de la periode courante, recopiee telle quelle. */
+  query: string;
 }) {
   return (
     <nav
@@ -90,7 +91,7 @@ export function BottomNav({
           return (
             <li key={tab.key} className="flex-1">
               <Link
-                href={`${tab.path}?period=${period}`}
+                href={`${tab.path}?${query}`}
                 aria-current={isActive ? "page" : undefined}
                 className="flex h-[68px] flex-col items-center justify-center gap-1"
               >

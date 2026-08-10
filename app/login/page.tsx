@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/BrandMark";
 import { login } from "./actions";
 
 export const metadata = {
@@ -22,9 +23,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             connexion appartient visiblement au même produit. */}
         <div className="hero-gradient rounded-t-[var(--radius-hero)] px-8 pt-8 pb-10">
           <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/20 text-[0.9rem] font-bold text-white">
-              H
-            </span>
+            <BrandMark size={34} />
             <span className="text-[0.95rem] font-semibold text-white">
               HUPPLE STORE
             </span>

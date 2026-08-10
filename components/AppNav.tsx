@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { PeriodKey } from "@/lib/period";
+
 
 /**
  * Navigation entre les deux domaines d'analyse.
@@ -10,16 +10,17 @@ import type { PeriodKey } from "@/lib/period";
  */
 export function AppNav({
   active,
-  period,
+  query,
 }: {
   active: "rentabilite" | "tunnel" | "relances" | "veille";
-  period: PeriodKey;
+  /** Chaine de requete de la periode courante, recopiee telle quelle. */
+  query: string;
 }) {
   const tabs = [
-    { key: "rentabilite" as const, label: "Rentabilité", href: `/?period=${period}` },
-    { key: "tunnel" as const, label: "Tunnel", href: `/tunnel?period=${period}` },
-    { key: "relances" as const, label: "Relances", href: `/relances?period=${period}` },
-    { key: "veille" as const, label: "Veille", href: `/veille?period=${period}` },
+    { key: "rentabilite" as const, label: "Rentabilité", href: `/?${query}` },
+    { key: "tunnel" as const, label: "Tunnel", href: `/tunnel?${query}` },
+    { key: "relances" as const, label: "Relances", href: `/relances?${query}` },
+    { key: "veille" as const, label: "Veille", href: `/veille?${query}` },
   ];
 
   return (

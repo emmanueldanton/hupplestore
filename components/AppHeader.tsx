@@ -3,7 +3,7 @@ import { BrandMark } from "./BrandMark";
 import { LogoutButton } from "./LogoutButton";
 import { PeriodSelector } from "./PeriodSelector";
 import { RefreshButton } from "./RefreshButton";
-import type { PeriodKey } from "@/lib/period";
+import type { Period } from "@/lib/period";
 
 /**
  * Bandeau commun aux quatre écrans.
@@ -24,13 +24,11 @@ export function AppHeader({
   active,
   period,
   basePath,
-  windowDays = 0,
   children,
 }: {
   active: "rentabilite" | "tunnel" | "relances" | "veille";
-  period: PeriodKey;
+  period: Period;
   basePath: "/" | "/tunnel" | "/relances" | "/veille";
-  windowDays?: number;
   children?: React.ReactNode;
 }) {
   return (
@@ -41,17 +39,13 @@ export function AppHeader({
             <BrandMark size={34} />
             {/* Sur téléphone, la navigation vit dans la barre du bas. */}
             <div className="hidden lg:block">
-              <AppNav active={active} period={period} />
+              <AppNav active={active} query={period.query} />
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <div className="hidden lg:block">
-              <PeriodSelector
-                active={period}
-                windowDays={windowDays}
-                basePath={basePath}
-              />
+              <PeriodSelector period={period} basePath={basePath} />
             </div>
             <RefreshButton />
             <LogoutButton />
@@ -61,11 +55,7 @@ export function AppHeader({
         {/* Sur téléphone, le sélecteur prend sa propre ligne : coincé entre le
             logo et deux boutons, il devenait illisible. */}
         <div className="mt-3 lg:hidden">
-          <PeriodSelector
-            active={period}
-            windowDays={windowDays}
-            basePath={basePath}
-          />
+          <PeriodSelector period={period} basePath={basePath} />
         </div>
 
         {children && <div className="mt-6">{children}</div>}

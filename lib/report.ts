@@ -3,7 +3,7 @@ import { fetchAttempts, fetchSales, getNetRate } from "./chariow";
 import { buildFunnel, type FunnelReport } from "./funnel";
 import { fetchAdSpend } from "./meta";
 import { loadCampaignMap, loadConfig, ConfigError } from "./config";
-import { resolvePeriod, type PeriodKey } from "./period";
+import type { Period } from "./period";
 import type {
   AdSpendRecord,
   ProfitabilityReport,
@@ -49,8 +49,9 @@ export interface FunnelData {
  *
  * Ne dépend que de Chariow : une panne côté Meta n'a aucun effet ici.
  */
-export async function loadFunnel(period: PeriodKey): Promise<FunnelData> {
-  const { current, previous } = resolvePeriod(period);
+export async function loadFunnel(periode: Period): Promise<FunnelData> {
+  const current = { from: periode.from, to: periode.to };
+  const previous = { from: periode.previousFrom, to: periode.previousTo };
 
   let config;
   try {
@@ -150,10 +151,11 @@ function buildSensitivity(params: {
 }
 
 export async function loadDashboard(
-  period: PeriodKey,
+  periode: Period,
   attributionWindowDays = 0,
 ): Promise<DashboardData> {
-  const { current, previous } = resolvePeriod(period);
+  const current = { from: periode.from, to: periode.to };
+  const previous = { from: periode.previousFrom, to: periode.previousTo };
   const warnings: string[] = [];
 
   let config;

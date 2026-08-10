@@ -6,7 +6,8 @@ import { Notice } from "@/components/Notice";
 import { SegmentTable } from "@/components/SegmentTable";
 import { FAMILY_ADVICE, FAMILY_LABELS } from "@/lib/funnel";
 import { formatPercent, formatXof } from "@/lib/money";
-import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
+import { cookies } from "next/headers";
+import { PERIOD_COOKIE, resolvePeriodFromParams } from "@/lib/period";
 import { loadFunnel } from "@/lib/report";
 
 export const metadata = {
@@ -15,8 +16,8 @@ export const metadata = {
 
 export default async function TunnelPage({ searchParams }: PageProps<"/tunnel">) {
   const params = await searchParams;
-  const raw = Array.isArray(params.period) ? params.period[0] : params.period;
-  const period = isPeriodKey(raw) ? raw : DEFAULT_PERIOD;
+  const memoire = (await cookies()).get(PERIOD_COOKIE)?.value;
+  const period = resolvePeriodFromParams(params, memoire);
 
   const { current, fatal } = await loadFunnel(period);
 
@@ -165,7 +166,7 @@ export default async function TunnelPage({ searchParams }: PageProps<"/tunnel">)
         </div>
       </main>
 
-      <BottomNav active="tunnel" period={period} />
+      <BottomNav active="tunnel" query={period.query} />
     </>
   );
 }
