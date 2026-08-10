@@ -36,9 +36,7 @@ export function AttributionSensitivity({
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-2">
-        <span className="text-[0.78rem] text-ink-soft">
-          Fenêtre appliquée ci-dessus :
-        </span>
+        <span className="text-[0.75rem] text-ink-muted">Délai d&apos;achat :</span>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] bg-surface-sunken p-1">
           {SENSITIVITY_WINDOWS.map((days) => (
             <Link
@@ -157,22 +155,16 @@ export function AttributionSensitivity({
         </table>
       </div>
 
-      <p className="mt-5 text-[0.8rem] leading-relaxed text-ink-muted">
+      <p className="mt-4 text-[0.78rem] leading-relaxed text-ink-muted">
         {unstable === 0 ? (
-          <>
-            Le verdict de toutes les campagnes résiste au changement de fenêtre.
-            Le classement ne dépend donc pas de l&apos;hypothèse retenue sur le
-            délai entre le clic et l&apos;achat.
-          </>
+          <>Tous les verdicts résistent au changement de délai.</>
         ) : (
           <>
             <strong className="text-negative">
               {unstable} campagne{unstable > 1 ? "s" : ""} change
-              {unstable > 1 ? "nt" : ""} de verdict selon la fenêtre.
+              {unstable > 1 ? "nt" : ""} de verdict selon le délai retenu.
             </strong>{" "}
-            Leur résultat reflète une hypothèse autant que les données. Ne
-            fonde aucune décision de budget sur ces lignes tant que le volume
-            n&apos;a pas augmenté.
+            Ne fonde aucune décision de budget sur ces lignes.
           </>
         )}
       </p>

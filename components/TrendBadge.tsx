@@ -39,7 +39,7 @@ export function TrendBadge({
       : "text-negative";
 
   return (
-    <span className="inline-flex items-center gap-1.5">
+    <span className="inline-flex flex-wrap items-center gap-x-1.5">
       <span className={`text-[0.72rem] font-semibold ${color}`}>
         <span aria-hidden="true">{direction === "up" ? "↗" : "↘"}</span>{" "}
         {formatPercent(Math.abs(ratio), false)}

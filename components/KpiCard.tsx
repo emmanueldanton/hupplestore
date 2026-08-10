@@ -9,7 +9,6 @@ import { computeDelta } from "@/lib/money";
  */
 export function KpiCard({
   label,
-  icon,
   value,
   previous,
   higherIsBetter = true,
@@ -18,7 +17,6 @@ export function KpiCard({
   accent = false,
 }: {
   label: string;
-  icon: string;
   value: number;
   previous: number;
   higherIsBetter?: boolean;
@@ -32,23 +30,23 @@ export function KpiCard({
 
   return (
     <div
-      className={`card flex flex-col justify-between gap-4 p-5 ${
+      className={`card flex flex-col justify-between gap-3 p-4 ${
         isLoss ? "border-negative/25 bg-negative-soft" : ""
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <span className="text-[0.82rem] font-medium text-ink-soft">{label}</span>
-        <span aria-hidden="true" className="text-[0.9rem] opacity-40">
-          {icon}
-        </span>
-      </div>
+      {/* Pas d'icône décorative : à cette taille elle n'apporte aucun sens et
+          concurrence le chiffre, qui est la seule chose à regarder. */}
+      <span className="text-[0.75rem] font-medium text-ink-soft">{label}</span>
 
-      <Amount xof={value} size="xl" showEur={showEur} signed={signed} />
+      <Amount xof={value} size="lg" showEur={showEur} signed={signed} />
 
+      {/* Libellé abrégé : en demi-largeur, « vs période précédente » se brisait
+          sur trois lignes et noyait le pourcentage. */}
       <TrendBadge
         ratio={delta.ratio}
         direction={delta.direction}
         higherIsBetter={higherIsBetter}
+        context="vs préc."
       />
     </div>
   );
