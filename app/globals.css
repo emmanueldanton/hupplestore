@@ -107,6 +107,36 @@ body {
   border: 1px solid var(--hairline);
 }
 
+/*
+ * Bandeau pleine largeur.
+ *
+ * Posé en carte flottante, il donnait l'allure d'une page web : marges
+ * latérales, coins arrondis, fond visible tout autour. Une application occupe
+ * le bord de l'écran.
+ *
+ * La réserve haute libère la barre d'état. Sans elle, et parce que iOS rend
+ * l'application sous la barre en mode « black-translucent », le logo passait
+ * derrière l'heure et l'indicateur de réseau.
+ */
+.app-header {
+  background:
+    radial-gradient(
+      120% 160% at 85% 0%,
+      rgba(120, 170, 255, 0.18) 0%,
+      rgba(120, 170, 255, 0) 60%
+    ),
+    linear-gradient(
+      160deg,
+      var(--brand-from) 0%,
+      var(--brand-mid) 55%,
+      var(--brand-to) 100%
+    );
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.9rem);
+  padding-bottom: 1.25rem;
+  border-bottom-left-radius: var(--radius-hero);
+  border-bottom-right-radius: var(--radius-hero);
+}
+
 /* Verre dépoli du panneau « solde » posé sur le dégradé. */
 .glass {
   background: rgba(255, 255, 255, 0.14);

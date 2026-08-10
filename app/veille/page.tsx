@@ -1,12 +1,8 @@
-import { AppNav } from "@/components/AppNav";
+import { AppHeader, HeaderStats } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
-import { BrandMark } from "@/components/BrandMark";
 import { Explain } from "@/components/Explain";
-import { LogoutButton } from "@/components/LogoutButton";
 import { Notice } from "@/components/Notice";
 import { OpportunityCalculator } from "@/components/OpportunityCalculator";
-import { PeriodSelector } from "@/components/PeriodSelector";
-import { RefreshButton } from "@/components/RefreshButton";
 import { formatPercent, formatRoas, formatXof } from "@/lib/money";
 import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
 import { loadDashboard } from "@/lib/report";
@@ -31,50 +27,33 @@ export default async function VeillePage({ searchParams }: PageProps<"/veille">)
 
   return (
     <>
-      <main className="has-tabbar mx-auto w-full max-w-[1240px] px-4 py-4 sm:px-6 sm:py-6">
-        <header className="hero-gradient overflow-hidden rounded-[var(--radius-hero)] px-5 py-5 sm:px-7 sm:py-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <BrandMark size={32} />
-              <div className="hidden lg:block">
-                <AppNav active="veille" period={period} />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <PeriodSelector active={period} windowDays={0} basePath="/veille" />
-              <RefreshButton />
-              <LogoutButton />
-            </div>
-          </div>
+      <AppHeader active="veille" period={period} basePath="/veille">
+        <HeaderStats
+          label="Prix plancher"
+          value={
+            <span className="numeral text-[2.5rem] leading-none text-white">
+              {eco.floorXof === null ? "n/d" : formatXof(eco.floorXof)}
+            </span>
+          }
+          hint={
+            <span className="text-[0.78rem] text-white/55">
+              {eco.cpcXof === null
+                ? "Coût par clic indisponible"
+                : `${formatXof(eco.cpcXof)} le clic · ${formatPercent(eco.cvr, false)} de conversion`}
+            </span>
+          }
+          asideLabel="Confortable"
+          aside={
+            <span className="numeral text-[1.9rem] leading-none text-white">
+              {eco.comfortXof === null ? "n/d" : formatXof(eco.comfortXof)}
+            </span>
+          }
+        />
+      </AppHeader>
 
-          <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <p className="text-[0.75rem] font-medium text-white/60">
-                Prix plancher
-              </p>
-              <p className="numeral mt-1 text-[2.6rem] leading-none text-white">
-                {eco.floorXof === null ? "n/d" : formatXof(eco.floorXof)}
-              </p>
-              <p className="mt-2 text-[0.78rem] text-white/60">
-                {eco.cpcXof === null
-                  ? "Coût par clic indisponible"
-                  : `${formatXof(eco.cpcXof)} le clic · ${formatPercent(eco.cvr, false)} de conversion`}
-              </p>
-            </div>
-
-            <div className="text-right">
-              <p className="text-[0.75rem] font-medium text-white/60">
-                Confortable
-              </p>
-              <p className="numeral mt-1 text-[2rem] leading-none text-white">
-                {eco.comfortXof === null ? "n/d" : formatXof(eco.comfortXof)}
-              </p>
-            </div>
-          </div>
-        </header>
-
+      <main className="has-tabbar mx-auto w-full max-w-[1240px] px-4 pt-4 sm:px-6">
         {fatal && (
-          <div className="mt-4">
+          <div>
             <Notice tone="error" title="Impossible de charger les données">
               {fatal}
             </Notice>
@@ -82,7 +61,7 @@ export default async function VeillePage({ searchParams }: PageProps<"/veille">)
         )}
 
         {/* ── Calculateur ────────────────────────────────────────────────── */}
-        <section className="card mt-4 p-5 sm:p-6">
+        <section className={`card p-5 sm:p-6 ${fatal ? "mt-3" : ""}`}>
           <h2 className="text-[0.9rem] font-semibold text-ink">Tester un prix</h2>
           <div className="mt-4">
             <OpportunityCalculator economics={eco} />

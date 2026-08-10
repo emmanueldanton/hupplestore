@@ -2,14 +2,20 @@ import Link from "next/link";
 import { PERIODS, type PeriodKey } from "@/lib/period";
 
 /**
- * Sélecteur de période sous forme de pilule. Ce sont de vrais liens : la page
- * reste entièrement rendue côté serveur, sans JavaScript client, et chaque
- * période a son URL partageable.
+ * Contrôle segmenté de période.
  *
- * `basePath` est obligatoire, et non pas facultatif avec « / » par défaut :
- * un défaut silencieux avait renvoyé l'utilisateur du Tunnel vers la
- * Rentabilité à chaque changement de période. Le rendre explicite force
- * chaque page à déclarer où elle se trouve.
+ * Les pilules étaient coincées entre le logo et deux boutons d'action, dans
+ * une rangée trop étroite : quatre libellés compressés qui ressemblaient à des
+ * boutons de page web. Il occupe désormais sa propre ligne et toute la
+ * largeur sur téléphone, avec des segments de taille égale, comme un vrai
+ * contrôle d'application.
+ *
+ * Ce sont de vrais liens : la page reste rendue côté serveur, sans JavaScript,
+ * et chaque période a son URL partageable.
+ *
+ * `basePath` est obligatoire, et non facultatif avec « / » par défaut : un
+ * défaut silencieux avait renvoyé l'utilisateur du Tunnel vers la Rentabilité
+ * à chaque changement de période.
  */
 export function PeriodSelector({
   active,
@@ -23,7 +29,7 @@ export function PeriodSelector({
   return (
     <nav
       aria-label="Période d'analyse"
-      className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-white/10 p-1 backdrop-blur-sm"
+      className="flex w-full items-stretch gap-0.5 rounded-[var(--radius-pill)] bg-black/20 p-1 lg:w-auto"
     >
       {(Object.keys(PERIODS) as PeriodKey[]).map((key) => {
         const isActive = key === active;
@@ -32,10 +38,10 @@ export function PeriodSelector({
             key={key}
             href={`${basePath}?period=${key}&window=${windowDays}`}
             aria-current={isActive ? "page" : undefined}
-            className={`rounded-[var(--radius-pill)] px-3 py-1.5 text-[0.8rem] font-semibold transition-colors sm:px-3.5 ${
+            className={`flex-1 rounded-[var(--radius-pill)] px-3 py-1.5 text-center text-[0.78rem] font-semibold transition-colors lg:flex-none ${
               isActive
-                ? "bg-white text-ink"
-                : "text-white/70 hover:bg-white/10 hover:text-white"
+                ? "bg-white text-ink shadow-sm"
+                : "text-white/65 hover:text-white"
             }`}
           >
             <span className="sm:hidden">{PERIODS[key].short}</span>

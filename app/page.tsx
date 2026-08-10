@@ -1,14 +1,15 @@
 import { Amount } from "@/components/Amount";
+import { AppHeader, HeaderStats } from "@/components/AppHeader";
 import { AttributionSensitivity } from "@/components/AttributionSensitivity";
 import { BottomNav } from "@/components/BottomNav";
 import { CampaignTable } from "@/components/CampaignTable";
 import { Explain } from "@/components/Explain";
-import { Hero } from "@/components/Hero";
 import { KpiCard } from "@/components/KpiCard";
 import { Notice } from "@/components/Notice";
 import { ProductTable } from "@/components/ProductTable";
 import { SpendRevenueChart } from "@/components/SpendRevenueChart";
-import { formatInt } from "@/lib/money";
+import { TrendBadge } from "@/components/TrendBadge";
+import { computeDelta, formatInt, formatRoas } from "@/lib/money";
 import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
 import { loadDashboard, SENSITIVITY_WINDOWS } from "@/lib/report";
 
@@ -34,13 +35,62 @@ export default async function Page({ searchParams }: PageProps<"/">) {
     windowDays,
   );
 
+  const marginDelta = computeDelta(
+    current.kpis.marginXof,
+    previous.kpis.marginXof,
+  );
+  const roas = current.kpis.roas;
+
+  // Sans aucune vente ni dépense, il n'y a pas de verdict à rendre. Annoncer
+  // « tu gagnes de l'argent » sur une marge de 0 F serait un mensonge poli.
+  const hasData = current.kpis.sales > 0 || current.kpis.spendXof > 0;
+  const isProfitable = hasData && current.kpis.marginXof >= 0;
+
   return (
     <>
-      <main className="has-tabbar mx-auto w-full max-w-[1240px] px-4 py-4 sm:px-6 sm:py-6">
-        <Hero report={current} previous={previous} period={period} />
+      <AppHeader
+        active="rentabilite"
+        period={period}
+        basePath="/"
+        windowDays={windowDays}
+      >
+        <HeaderStats
+          label={
+            !hasData
+              ? "Rien à analyser"
+              : isProfitable
+                ? "Tu gagnes de l'argent"
+                : "Tu perds de l'argent"
+          }
+          value={
+            <Amount xof={current.kpis.marginXof} size="hero" onDark signed />
+          }
+          hint={
+            <TrendBadge
+              ratio={marginDelta.ratio}
+              direction={marginDelta.direction}
+              onDark
+            />
+          }
+          asideLabel="ROAS"
+          aside={
+            <span className="numeral text-[1.9rem] leading-none text-white">
+              {formatRoas(roas)}
+            </span>
+          }
+          asideBadge={
+            hasData && !isProfitable && roas !== null ? (
+              <span className="inline-block rounded-full bg-alert px-2 py-0.5 text-[0.66rem] font-bold text-white">
+                sous l&apos;équilibre
+              </span>
+            ) : null
+          }
+        />
+      </AppHeader>
 
+      <main className="has-tabbar mx-auto w-full max-w-[1240px] px-4 pt-4 sm:px-6">
         {(fatal || warnings.length > 0) && (
-          <div className="mt-4 flex flex-col gap-3">
+          <div className="flex flex-col gap-3">
             {fatal && (
               <Notice tone="error" title="Impossible de charger les données">
                 {fatal}
@@ -55,9 +105,7 @@ export default async function Page({ searchParams }: PageProps<"/">) {
                     : `${warnings.length} points à savoir`
                 }
               >
-                {/* Repliés : ces avertissements comptent, mais déployés ils
-                    occupaient un écran entier avant le moindre chiffre. */}
-                <details className="group">
+                <details>
                   <summary className="cursor-pointer list-none text-[0.78rem] font-medium underline decoration-dotted underline-offset-2">
                     Voir le détail
                   </summary>
@@ -75,7 +123,9 @@ export default async function Page({ searchParams }: PageProps<"/">) {
         {/* ── Indicateurs ────────────────────────────────────────────────── */}
         <section
           aria-label="Indicateurs clés"
-          className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4"
+          className={`grid grid-cols-2 gap-3 xl:grid-cols-4 ${
+            fatal || warnings.length > 0 ? "mt-3" : ""
+          }`}
         >
           <KpiCard
             label="Dépense pub"
@@ -161,9 +211,7 @@ export default async function Page({ searchParams }: PageProps<"/">) {
           </div>
 
           <div className="card flex flex-col justify-between gap-4 p-5 sm:p-6">
-            <h2 className="text-[0.9rem] font-semibold text-ink">
-              Non attribué
-            </h2>
+            <h2 className="text-[0.9rem] font-semibold text-ink">Non attribué</h2>
             <div>
               <Amount xof={current.unattributed.netXof} size="xl" showEur />
               <p className="mt-1.5 text-[0.75rem] text-ink-muted">

@@ -1,13 +1,9 @@
 import { Amount } from "@/components/Amount";
-import { AppNav } from "@/components/AppNav";
+import { AppHeader, HeaderStats } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
-import { BrandMark } from "@/components/BrandMark";
 import { Explain } from "@/components/Explain";
-import { LogoutButton } from "@/components/LogoutButton";
 import { Notice } from "@/components/Notice";
-import { PeriodSelector } from "@/components/PeriodSelector";
 import { RecoveryList } from "@/components/RecoveryList";
-import { RefreshButton } from "@/components/RefreshButton";
 import { FAMILY_LABELS } from "@/lib/funnel";
 import { DEFAULT_PERIOD, isPeriodKey } from "@/lib/period";
 import { loadFunnel } from "@/lib/report";
@@ -39,64 +35,43 @@ export default async function RelancesPage({
 
   return (
     <>
-      <main className="has-tabbar mx-auto w-full max-w-[1240px] px-4 py-4 sm:px-6 sm:py-6">
-        <header className="hero-gradient overflow-hidden rounded-[var(--radius-hero)] px-5 py-5 sm:px-7 sm:py-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <BrandMark size={32} />
-              <div className="hidden lg:block">
-                <AppNav active="relances" period={period} />
+      <AppHeader active="relances" period={period} basePath="/relances">
+        <HeaderStats
+          label="À recontacter"
+          value={
+            <span className="numeral text-[2.5rem] leading-none text-white">
+              {current.contacts.length}
+            </span>
+          }
+          hint={
+            parFamille.size > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {[...parFamille.entries()].map(([family, count]) => (
+                  <span
+                    key={family}
+                    className="rounded-[var(--radius-pill)] bg-white/12 px-2.5 py-1 text-[0.7rem] font-medium text-white/85"
+                  >
+                    {count} · {FAMILY_LABELS[family as keyof typeof FAMILY_LABELS]}
+                  </span>
+                ))}
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <PeriodSelector active={period} windowDays={0} basePath="/relances" />
-              <RefreshButton />
-              <LogoutButton />
-            </div>
-          </div>
+            ) : null
+          }
+          asideLabel="En jeu, net"
+          aside={<Amount xof={current.recoverable.netXof} size="xl" onDark />}
+        />
+      </AppHeader>
 
-          <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <p className="text-[0.75rem] font-medium text-white/60">
-                À recontacter
-              </p>
-              <p className="numeral mt-1 text-[2.6rem] leading-none text-white">
-                {current.contacts.length}
-              </p>
-              {parFamille.size > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {[...parFamille.entries()].map(([family, count]) => (
-                    <span
-                      key={family}
-                      className="rounded-[var(--radius-pill)] bg-white/12 px-2.5 py-1 text-[0.7rem] font-medium text-white/85"
-                    >
-                      {count} · {FAMILY_LABELS[family as keyof typeof FAMILY_LABELS]}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="text-right">
-              <p className="text-[0.75rem] font-medium text-white/60">
-                En jeu, net
-              </p>
-              <div className="mt-1">
-                <Amount xof={current.recoverable.netXof} size="xl" onDark />
-              </div>
-            </div>
-          </div>
-        </header>
-
+      <main className="has-tabbar mx-auto w-full max-w-[1240px] px-4 pt-4 sm:px-6">
         {fatal && (
-          <div className="mt-4">
+          <div>
             <Notice tone="error" title="Impossible de charger les données">
               {fatal}
             </Notice>
           </div>
         )}
 
-        <section className="card mt-4 p-5 sm:p-6">
+        <section className={`card p-5 sm:p-6 ${fatal ? "mt-3" : ""}`}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-[0.9rem] font-semibold text-ink">Liste</h2>
             <span className="text-[0.72rem] text-ink-muted">45 derniers jours</span>

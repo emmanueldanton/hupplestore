@@ -29,7 +29,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f4562a",
+  // Doit correspondre au haut du bandeau, sinon la barre d'état du téléphone
+  // tranche avec l'application et l'heure semble posée sur un bandeau étranger.
+  themeColor: "#1e3c74",
   // Une application installée doit occuper l'encoche et les bords arrondis.
   viewportFit: "cover",
 };

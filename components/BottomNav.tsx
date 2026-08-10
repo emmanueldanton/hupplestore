@@ -25,13 +25,12 @@ const TABS: {
     label: "Rentabilité",
     path: "/",
     icon: (
+      // Courbe de tendance : dit la progression, là où des barres ne disent
+      // qu'une quantité. C'est ce que cet onglet mesure.
       <>
-        {/* Barres tracées à la plume : des traits épais aux bouts ronds,
-            posés sur une ligne de base, plutôt que des rectangles pleins. */}
-        <path d="M4 19.5h16" />
-        <path d="M7.6 19.5v-4.2" strokeWidth={2.4} />
-        <path d="M12 19.5v-7.6" strokeWidth={2.4} />
-        <path d="M16.4 19.5v-11" strokeWidth={2.4} />
+        <path d="M4 15.2l4.4-4.6 3.3 3 6.3-6.4" />
+        <path d="M14.4 7.2H18v3.6" />
+        <path d="M4 19.6h16" />
       </>
     ),
   },
@@ -41,8 +40,8 @@ const TABS: {
     path: "/tunnel",
     icon: (
       <>
-        <path d="M4.6 5.4h14.8" />
-        <path d="M6.6 8.2l4.1 4.7v5.4l2.6 1.5v-6.9l4.1-4.7" />
+        <path d="M4.8 5.6h14.4" />
+        <path d="M7 8.6l3.7 4.3v5l2.6 1.4v-6.4L17 8.6" />
       </>
     ),
   },
@@ -51,12 +50,11 @@ const TABS: {
     label: "Relances",
     path: "/relances",
     icon: (
+      // Avion : l'onglet sert à envoyer un message, pas à en recevoir. Une
+      // cloche de notification disait l'inverse de sa fonction.
       <>
-        {/* Bulle de message, non pas cloche : cet onglet sert à écrire aux
-            acheteurs, pas à recevoir des notifications. */}
-        <path d="M12 4.4c-4.3 0-7.7 2.8-7.7 6.3 0 1.9 1 3.6 2.7 4.8v2.6c0 .5.5.8.9.5l2.3-1.5c.6.1 1.2.2 1.8.2 4.3 0 7.7-2.8 7.7-6.6S16.3 4.4 12 4.4z" />
-        <path d="M9.3 10.7h.01" strokeWidth={2.2} />
-        <path d="M14.7 10.7h.01" strokeWidth={2.2} />
+        <path d="M20 4.4L3.9 10.6c-.6.2-.6 1 0 1.2l6 2.2 2.2 6c.2.6 1 .6 1.2 0L20 4.4z" />
+        <path d="M20 4.4l-10.1 9.6" />
       </>
     ),
   },
@@ -66,8 +64,8 @@ const TABS: {
     path: "/veille",
     icon: (
       <>
-        <circle cx="11" cy="10.8" r="6.1" />
-        <path d="M15.5 15.4l4 4.2" />
+        <circle cx="10.8" cy="10.8" r="5.9" />
+        <path d="M15.2 15.2l4.3 4.4" />
       </>
     ),
   },
