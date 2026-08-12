@@ -5,19 +5,16 @@
  * Trésor français. Ce n'est pas un taux de marché : il ne bouge pas, donc la
  * conversion XOF <-> EUR est exacte et ne nécessite aucune API externe.
  */
-export const XOF_PER_EUR = 655.957;
+export { XOF_PER_EUR } from "./rates";
+import { resolveRate, XOF_PER_EUR } from "./rates";
 
 /**
- * Taux de repli pour les devises non arrimées (USD, GBP...). Configurable via
- * la variable d'environnement, car il n'existe aucune conversion exacte.
- * Utilisé uniquement si le compte publicitaire Meta n'est ni en XOF ni en EUR.
+ * Taux de repli pour les devises non arrimées (USD, GBP...). Le taux et sa
+ * date de valeur vivent dans `rates.ts`, qui est la seule source : EF-18 exige
+ * d'afficher la date, et deux endroits différents finiraient par diverger.
  */
 export function getFallbackRateToXof(currency: string): number | null {
-  const key = `RATE_${currency.toUpperCase()}_XOF`;
-  const raw = process.env[key];
-  if (!raw) return null;
-  const value = Number(raw);
-  return Number.isFinite(value) && value > 0 ? value : null;
+  return resolveRate(currency)?.rate ?? null;
 }
 
 export class UnsupportedCurrencyError extends Error {

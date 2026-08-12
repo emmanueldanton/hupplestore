@@ -29,6 +29,7 @@ export function Amount({
   onDark = false,
   showEur = false,
   signed = false,
+  tone,
 }: {
   xof: number;
   size?: Size;
@@ -37,13 +38,20 @@ export function Amount({
   showEur?: boolean;
   /** Force le signe + sur les valeurs positives (marges, écarts). */
   signed?: boolean;
+  /**
+   * Couleur imposée, pour les cas où elle porte du sens plutôt qu'un style.
+   * EF-14 exige un résultat vert s'il est positif, rouge s'il est négatif :
+   * sans cette échappée, la couleur par défaut du composant l'écraserait.
+   */
+  tone?: string;
 }) {
   const { main, suffix } = formatXofParts(xof);
   const prefix = signed && xof > 0 ? "+" : "";
+  const couleur = tone ?? (onDark ? "text-white" : "text-ink");
 
   return (
     <span className="inline-flex flex-col">
-      <span className={`numeral ${sizeClass[size]} ${onDark ? "text-white" : "text-ink"}`}>
+      <span className={`numeral ${sizeClass[size]} ${couleur}`}>
         {prefix}
         {main}
         <span

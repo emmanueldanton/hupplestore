@@ -1,4 +1,5 @@
 import { assess, UNKNOWN_CONFIDENCE } from "./decision";
+import { resolveRate } from "./rates";
 import type {
   AdSpendRecord,
   CampaignPerformance,
@@ -326,7 +327,12 @@ export function buildReport(params: {
     },
   );
 
-  campaigns.sort((a, b) => b.marginXof - a.marginXof);
+  // EF-16 : tri par résultat croissant, la plus déficitaire en premier.
+  //
+  // Contre-intuitif au premier abord, et c'est voulu. Un tableau de bord de
+  // rentabilité sert à repérer ce qui saigne, pas à se féliciter : ce qui
+  // demande une décision doit apparaître avant ce qui va bien.
+  campaigns.sort((a, b) => a.marginXof - b.marginXof);
 
   // ── Agrégats par produit ────────────────────────────────────────────────
   const spendByProduct = new Map<string, number>();
@@ -406,6 +412,10 @@ export function buildReport(params: {
     activeCampaignsKnown: activeIds.size > 0,
     hasEstimatedNet: sales.some((s) => s.netIsEstimated),
     adAccountCurrency: params.adAccountCurrency ?? null,
+    hasRevenue: sales.length > 0,
+    appliedRate: params.adAccountCurrency
+      ? resolveRate(params.adAccountCurrency)
+      : null,
     attributionWindowDays: windowDays,
     netPerSaleXof: globalNetPerSale,
   };

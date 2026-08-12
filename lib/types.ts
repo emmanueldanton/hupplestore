@@ -1,4 +1,5 @@
 import type { CampaignConfidence } from "./decision";
+import type { AppliedRate } from "./rates";
 
 /**
  * Modèle de données du tableau de bord de rentabilité.
@@ -177,6 +178,17 @@ export interface ProfitabilityReport {
   adAccountCurrency: string | null;
   /** Nombre de jours pendant lesquels une dépense peut revendiquer une vente. */
   attributionWindowDays: number;
+  /**
+   * EF-19 : false quand aucune ligne de revenu n'existe sur la période.
+   *
+   * Sans revenu, la marge vaut mécaniquement l'opposé de la dépense. Ce chiffre
+   * est arithmétiquement exact et pourtant trompeur : il annonce une perte là
+   * où l'on ignore simplement les recettes. Le système doit dire qu'il ne sait
+   * pas, pas afficher un résultat.
+   */
+  hasRevenue: boolean;
+  /** Taux de change appliqué à la dépense, avec sa date. EF-18. */
+  appliedRate: AppliedRate | null;
   /** Net moyen par vente sur la période, base de tous les seuils d'équilibre. */
   netPerSaleXof: number;
 }
