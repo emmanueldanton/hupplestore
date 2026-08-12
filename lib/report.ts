@@ -1,6 +1,7 @@
 import { buildReport } from "./attribution";
 import { fetchSales, getNetRate } from "./chariow";
-import { fetchAdSpend } from "./meta";
+import { computeGap, type PlatformGap } from "./gap";
+import { fetchAdSpend, fetchMetaClaim } from "./meta";
 import { loadCampaignMap, loadConfig, ConfigError } from "./config";
 import type { Period } from "./period";
 import type {
@@ -29,6 +30,11 @@ export interface DashboardData {
    * ventes : on affiche ce qu'on a, en disant clairement ce qui manque.
    */
   warnings: string[];
+  /**
+   * Écart entre ce que Meta annonce et ce qui est encaissé. null si la
+   * plateforme ne déclare aucune conversion sur la période.
+   */
+  gap: PlatformGap | null;
   /** Erreur bloquante : rien d'exploitable à afficher. */
   fatal: string | null;
 }
@@ -100,6 +106,7 @@ export async function loadDashboard(
       current: emptyReport(current.from, current.to),
       previous: emptyReport(previous.from, previous.to),
       sensitivity: [],
+      gap: null,
       warnings: [],
       fatal: message,
     };
@@ -115,7 +122,7 @@ export async function loadDashboard(
   // Un seul appel Chariow couvrant les deux périodes, découpé ensuite.
   // L'API ignorant les filtres de date, elle renvoie de toute façon
   // l'historique complet : deux appels seraient deux fois le même transfert.
-  const [salesAll, spendNow, spendBefore] = await Promise.allSettled([
+  const [salesAll, spendNow, spendBefore, metaClaim] = await Promise.allSettled([
     fetchSales(previous.from, current.to, config.chariowApiKey),
     fetchAdSpend(current.from, current.to, {
       accessToken: config.metaAccessToken,
@@ -123,6 +130,11 @@ export async function loadDashboard(
       apiVersion: config.metaApiVersion,
     }),
     fetchAdSpend(previous.from, previous.to, {
+      accessToken: config.metaAccessToken,
+      adAccountId: config.metaAdAccountId,
+      apiVersion: config.metaApiVersion,
+    }),
+    fetchMetaClaim(current.from, current.to, {
       accessToken: config.metaAccessToken,
       adAccountId: config.metaAdAccountId,
       apiVersion: config.metaApiVersion,
@@ -137,6 +149,7 @@ export async function loadDashboard(
       current: emptyReport(current.from, current.to),
       previous: emptyReport(previous.from, previous.to),
       sensitivity: [],
+      gap: null,
       warnings,
       fatal: messageOf(salesAll.reason),
     };
@@ -185,6 +198,13 @@ export async function loadDashboard(
     campaignMap,
   });
 
+  // La comparaison avec les déclarations de Meta est un complément : son
+  // absence ne doit jamais empêcher l'affichage du résultat.
+  const gap =
+    metaClaim.status === "fulfilled"
+      ? computeGap(metaClaim.value, report.kpis.spendXof)
+      : null;
+
   const instables = sensitivity.filter((row) => !row.stable && row.spendXof > 0);
   if (instables.length > 0) {
     warnings.push(
@@ -220,6 +240,7 @@ export async function loadDashboard(
       attributionWindowDays,
     }),
     sensitivity,
+    gap,
     warnings,
     fatal: null,
   };

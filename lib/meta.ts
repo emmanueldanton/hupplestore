@@ -35,6 +35,106 @@ export interface MetaCampaign {
   name: string;
 }
 
+/**
+ * Ce que Meta déclare avoir produit.
+ *
+ * C'est le chiffre que la plateforme met en avant, et il est systématiquement
+ * flatteur pour une raison mécanique : la valeur de conversion est le montant
+ * de la commande, avant frais de paiement et frais de plateforme. Meta ne les
+ * connaît pas et ne peut pas les déduire.
+ */
+export interface MetaClaim {
+  /** Nombre d'achats attribués par Meta. */
+  purchases: number;
+  /** Valeur de ces achats, dans la devise du compte, brute. */
+  valueRaw: number;
+  /** La même valeur convertie en francs CFA. */
+  valueXof: number;
+  /** ROAS tel que Meta l'affiche dans son gestionnaire. */
+  roas: number | null;
+}
+
+interface ActionRow {
+  action_type?: string;
+  value?: string;
+}
+
+/** Somme des lignes d'action portant l'un des types demandés. */
+function pickAction(rows: ActionRow[] | undefined, types: string[]): number {
+  if (!rows) return 0;
+  for (const type of types) {
+    const found = rows.find((r) => r.action_type === type);
+    if (found) return Number(found.value ?? 0) || 0;
+  }
+  return 0;
+}
+
+/**
+ * Lit les conversions déclarées par Meta sur la période.
+ *
+ * Plusieurs types d'action décrivent le même achat, `purchase`,
+ * `omni_purchase`, `offsite_conversion.fb_pixel_purchase`. Les additionner
+ * compterait chaque vente jusqu'à six fois : on retient le premier type
+ * disponible, par ordre de préférence.
+ */
+export async function fetchMetaClaim(
+  from: string,
+  to: string,
+  options: { accessToken: string; adAccountId: string; apiVersion?: string },
+): Promise<MetaClaim | null> {
+  const version = options.apiVersion || DEFAULT_API_VERSION;
+  const accountId = options.adAccountId.startsWith("act_")
+    ? options.adAccountId
+    : `act_${options.adAccountId}`;
+
+  const url = new URL(
+    `https://graph.facebook.com/${version}/${accountId}/insights`,
+  );
+  url.searchParams.set("level", "account");
+  url.searchParams.set(
+    "fields",
+    "spend,actions,action_values,purchase_roas,account_currency",
+  );
+  url.searchParams.set("time_range", JSON.stringify({ since: from, until: to }));
+  url.searchParams.set("access_token", options.accessToken);
+
+  const response = await fetch(url, { next: { revalidate: 60, tags: ["meta"] } });
+  const payload = (await response.json()) as {
+    data?: {
+      actions?: ActionRow[];
+      action_values?: ActionRow[];
+      purchase_roas?: ActionRow[];
+      account_currency?: string;
+    }[];
+    error?: unknown;
+  };
+
+  // Un échec ici ne doit pas priver l'utilisateur de son résultat : la
+  // comparaison est un complément, pas le cœur du calcul.
+  if (payload.error || !payload.data?.length) return null;
+
+  const row = payload.data[0];
+  const types = [
+    "purchase",
+    "omni_purchase",
+    "offsite_conversion.fb_pixel_purchase",
+  ];
+
+  const purchases = pickAction(row.actions, types);
+  const valueRaw = pickAction(row.action_values, types);
+  if (purchases === 0 && valueRaw === 0) return null;
+
+  const currency = row.account_currency ?? "XOF";
+  const roasRow = row.purchase_roas?.[0]?.value;
+
+  return {
+    purchases,
+    valueRaw,
+    valueXof: toXof(valueRaw, currency),
+    roas: roasRow ? Number(roasRow) || null : null,
+  };
+}
+
 export interface MetaInsightsResult {
   records: AdSpendRecord[];
   accountCurrency: string | null;

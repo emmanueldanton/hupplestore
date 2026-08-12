@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { CampaignTable } from "@/components/CampaignTable";
 import { Explain } from "@/components/Explain";
 import { Notice } from "@/components/Notice";
+import { PlatformGapCard } from "@/components/PlatformGapCard";
 import { ProductTable } from "@/components/ProductTable";
 import { ResultHeadline } from "@/components/ResultHeadline";
 import { SpendRevenueChart } from "@/components/SpendRevenueChart";
@@ -28,7 +29,7 @@ export default async function Page({ searchParams }: PageProps<"/">) {
     ? parsedWindow
     : 0;
 
-  const { current, sensitivity, warnings, fatal } = await loadDashboard(
+  const { current, sensitivity, gap, warnings, fatal } = await loadDashboard(
     period,
     windowDays,
   );
@@ -90,9 +91,18 @@ export default async function Page({ searchParams }: PageProps<"/">) {
           </div>
         )}
 
+        {/* ── Écart avec la plateforme ───────────────────────────────────── */}
+        {gap && (
+          <div className={fatal || warnings.length > 0 ? "mt-3" : ""}>
+            <PlatformGapCard gap={gap} />
+          </div>
+        )}
+
         {/* ── Campagnes ──────────────────────────────────────────────────── */}
         <section
-          className={`card p-5 sm:p-6 ${fatal || warnings.length > 0 ? "mt-3" : ""}`}
+          className={`card p-5 sm:p-6 ${
+            gap || fatal || warnings.length > 0 ? "mt-3" : ""
+          }`}
         >
           <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-[0.9rem] font-semibold text-ink">Campagnes</h2>
