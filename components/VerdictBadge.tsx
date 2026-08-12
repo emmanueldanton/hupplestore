@@ -23,15 +23,19 @@ export function VerdictBadge({
   probability?: number | null;
 }) {
   return (
-    <span className="inline-flex flex-col items-end gap-1">
+    // `items-start` et non `items-end` : dans une grille étroite, un alignement
+    // à droite poussait la mention hors de sa colonne. Elle est abrégée et
+    // libre de passer à la ligne, plutôt que maintenue sur 159 pixels par un
+    // `whitespace-nowrap` que la colonne ne pouvait pas offrir.
+    <span className="inline-flex min-w-0 flex-col items-start gap-1">
       <span
         className={`inline-block rounded-full px-2.5 py-1 text-[0.72rem] font-bold whitespace-nowrap ${styles[verdict]}`}
       >
         {VERDICT_LABELS[verdict]}
       </span>
       {typeof probability === "number" && verdict !== "sans_donnees" && (
-        <span className="text-[0.68rem] whitespace-nowrap text-ink-muted">
-          {Math.round(probability * 100)} % de chances d&apos;être rentable
+        <span className="text-[0.68rem] leading-snug text-ink-muted">
+          {Math.round(probability * 100)} % rentable
         </span>
       )}
     </span>

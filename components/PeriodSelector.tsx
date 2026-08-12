@@ -87,9 +87,10 @@ export function PeriodSelector({
             <input type="hidden" name="period" value="custom" />
             <input type="hidden" name="next" value={basePath} />
 
-            {/* Deux colonnes : les champs de date natifs sont larges, empilés
-                ils allongeaient un panneau déjà flottant. */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Une colonne par défaut, deux dès 380 pixels. Côte à côte sur un
+                écran de 360, les champs de date natifs écrasaient leur libellé
+                et le bouton ne recevait plus que la moitié de sa largeur. */}
+            <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
               <label className="flex min-w-0 flex-col gap-1">
                 <span className="text-[0.7rem] font-medium text-ink-muted">Du</span>
                 <input
