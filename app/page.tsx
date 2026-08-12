@@ -1,6 +1,5 @@
 import { Amount } from "@/components/Amount";
 import { AppHeader } from "@/components/AppHeader";
-import { BottomNav } from "@/components/BottomNav";
 import { CampaignTable } from "@/components/CampaignTable";
 import { Explain } from "@/components/Explain";
 import { Notice } from "@/components/Notice";
@@ -55,11 +54,11 @@ export default async function Page({ searchParams }: PageProps<"/">) {
 
   return (
     <>
-      <AppHeader active="rentabilite" period={period} basePath="/">
+      <AppHeader period={period}>
         <ResultHeadline report={current} />
       </AppHeader>
 
-      <main className="has-tabbar mx-auto w-full max-w-[1240px] px-4 pt-4 sm:px-6">
+      <main className="mx-auto w-full max-w-[1240px] px-4 pt-4 pb-8 sm:px-6">
         {(fatal || warnings.length > 0) && (
           <div className="flex flex-col gap-3">
             {fatal && (
@@ -204,8 +203,6 @@ export default async function Page({ searchParams }: PageProps<"/">) {
           </Explain>
         </div>
       </main>
-
-      <BottomNav active="rentabilite" query={period.query} />
     </>
   );
 }

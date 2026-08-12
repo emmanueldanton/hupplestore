@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Rentabilité HUPPLE STORE",
     short_name: "HUPPLE",
     description:
-      "Dépenses publicitaires confrontées au net réellement encaissé, et tunnel de paiement.",
+      "Dépenses publicitaires confrontées au net réellement encaissé.",
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -32,9 +32,7 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
-    shortcuts: [
-      { name: "Rentabilité", url: "/" },
-      { name: "Tunnel de paiement", url: "/tunnel" },
-    ],
+    // Pas de raccourcis : l'application n'a qu'un écran, un raccourci vers
+    // celui-ci ferait doublon avec l'icône elle-même.
   };
 }

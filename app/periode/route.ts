@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { PERIOD_COOKIE, resolvePeriodFromParams } from "@/lib/period";
 
-/** Chemins vers lesquels on accepte de rediriger, pour ne pas servir de tremplin. */
-const CHEMINS = new Set(["/", "/tunnel", "/relances", "/veille"]);
+/**
+ * Chemins vers lesquels on accepte de rediriger.
+ *
+ * Liste fermée, et non une redirection libre : sans elle, cette route servirait
+ * de tremplin vers n'importe quelle adresse. L'application n'a plus qu'un
+ * écran, la liste en porte donc un seul.
+ */
+const CHEMINS = new Set(["/"]);
 
 const UN_AN = 60 * 60 * 24 * 365;
 

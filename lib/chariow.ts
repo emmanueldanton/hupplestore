@@ -1,4 +1,4 @@
-import type { PurchaseAttempt, SaleRecord } from "./types";
+import type { SaleRecord } from "./types";
 
 const API_BASE = "https://api.chariow.com/v1";
 
@@ -252,54 +252,4 @@ export async function fetchSales(
     if (record && record.date >= from && record.date <= to) sales.push(record);
   }
   return sales;
-}
-
-/**
- * Toutes les tentatives d'achat de la période, abouties ou non.
- *
- * La date retenue est celle de **création**, et non de finalisation : une
- * tentative échouée n'a jamais de `completed_at`. Se fier à ce champ ferait
- * disparaître du tunnel précisément ce qu'il sert à mesurer.
- */
-export async function fetchAttempts(
-  from: string,
-  to: string,
-  apiKey: string,
-): Promise<PurchaseAttempt[]> {
-  const attempts: PurchaseAttempt[] = [];
-
-  for (const sale of await fetchRawSales(from, to, apiKey)) {
-    const timestamp = sale.created_at ?? sale.completed_at;
-    if (!timestamp) continue;
-
-    const date = toUtcDay(timestamp);
-    if (date < from || date > to) continue;
-
-    const phone = sale.customer?.phone;
-    const hasContact = Boolean(sale.customer?.email || phone?.number);
-
-    attempts.push({
-      id: sale.id,
-      date,
-      createdAt: timestamp,
-      status: sale.status,
-      productId: sale.product?.id ?? "inconnu",
-      productName: sale.product?.name ?? "Produit inconnu",
-      amountXof: sale.amount?.value ?? 0,
-      paymentCurrency: sale.payment?.amount?.currency ?? null,
-      failureCode: sale.payment?.failure_error?.code ?? null,
-      failureMessage: sale.payment?.failure_error?.customer_message ?? null,
-      customer: hasContact
-        ? {
-            name: sale.customer?.name ?? null,
-            email: sale.customer?.email ?? null,
-            phone: phone?.number ? String(phone.number) : null,
-            countryName: phone?.country?.name ?? null,
-            countryCode: phone?.country?.code ?? null,
-          }
-        : null,
-    });
-  }
-
-  return attempts;
 }

@@ -17,10 +17,11 @@ import { PERIODS, type Period, type PeriodKey } from "@/lib/period";
  */
 export function PeriodSelector({
   period,
-  basePath,
+  basePath = "/",
 }: {
   period: Period;
-  basePath: "/" | "/tunnel" | "/relances" | "/veille";
+  /** Ecran de retour apres le choix. Un seul ecran aujourd'hui. */
+  basePath?: "/";
 }) {
   const lien = (key: PeriodKey) =>
     `/periode?period=${key}&next=${encodeURIComponent(basePath)}`;

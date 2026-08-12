@@ -28,37 +28,6 @@ export interface SaleRecord {
   country: string | null;
 }
 
-/**
- * Une tentative d'achat, aboutie ou non.
- *
- * Là où `SaleRecord` ne retient que l'argent encaissé, ce type conserve les
- * échecs et les abandons : c'est la matière du tunnel de paiement.
- */
-export interface PurchaseAttempt {
-  id: string;
-  /** Jour de création de la tentative, en UTC. */
-  date: string;
-  createdAt: string;
-  /** completed, settled, failed, abandoned, awaiting_payment. */
-  status: string;
-  productId: string;
-  productName: string;
-  /** Montant de la commande en XOF, même si le paiement a échoué. */
-  amountXof: number;
-  /** Devise réellement débitée : révèle le pays et l'opérateur. */
-  paymentCurrency: string | null;
-  failureCode: string | null;
-  failureMessage: string | null;
-  /** Coordonnées, quand elles existent : c'est ce qui rend la relance possible. */
-  customer: {
-    name: string | null;
-    email: string | null;
-    phone: string | null;
-    countryName: string | null;
-    countryCode: string | null;
-  } | null;
-}
-
 /** Une ligne de dépense publicitaire Meta, pour un jour et une campagne. */
 export interface AdSpendRecord {
   date: string;

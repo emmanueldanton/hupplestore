@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 /**
- * Système de design : inspiré du « Banking Dashboard » de Nixtio.
+ * Système de design.
  *
- * Traits repris : fond gris chaud, hero en dégradé orange saturé à grand rayon,
- * cartes blanches très arrondies posées dessus, typographie grotesque serrée,
- * grands nombres à deux tons (chiffre en noir, unité en gris), micro-badges de
- * tendance, barres fines avec le groupe actif en noir.
+ * Bandeau bleu marine à pleine largeur, cartes blanches très arrondies posées
+ * sur un gris froid, typographie grotesque serrée, grands nombres à deux tons
+ * dont l'unité s'efface en gris.
  *
- * Toutes les couleurs sont définies ici : reskiner le tableau de bord se fait
- * dans ce seul bloc.
+ * La couleur ne décore pas : le vert et le rouge portent le signe du résultat,
+ * l'orange signale ce qui demande une vérification. Tout est défini dans ce
+ * seul bloc.
  */
 
 :root {
@@ -48,9 +48,6 @@
   --positive-soft: #e3f3ea;
   --negative: #cf3b34;
   --negative-soft: #fbe9e8;
-
-  /* Hauteur de la barre d'onglets, pour dégager le bas des pages. */
-  --tabbar-height: 68px;
 
   --radius-hero: 32px;
   --radius-card: 22px;
@@ -137,15 +134,6 @@ body {
   border-bottom-right-radius: var(--radius-hero);
 }
 
-/* Verre dépoli du panneau « solde » posé sur le dégradé. */
-.glass {
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border-radius: var(--radius-card);
-}
-
 /* Grands nombres : chiffres très serrés, comme dans la référence. */
 .numeral {
   font-variant-numeric: tabular-nums;
@@ -155,29 +143,6 @@ body {
 
 .tabular {
   font-variant-numeric: tabular-nums;
-}
-
-/* Le tableau des campagnes déborde sur mobile : il défile seul, jamais la page. */
-.scroll-x {
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-/*
- * Dégage le bas des pages pour la barre d'onglets fixe, encoche comprise.
- * Sans cette réserve, la dernière carte passerait sous la barre et resterait
- * inatteignable sur les téléphones à bord arrondi.
- */
-.has-tabbar {
-  padding-bottom: calc(
-    var(--tabbar-height) + env(safe-area-inset-bottom, 0px) + 1.25rem
-  );
-}
-
-@media (min-width: 1024px) {
-  .has-tabbar {
-    padding-bottom: 2rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
