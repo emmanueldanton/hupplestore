@@ -1,5 +1,6 @@
 import { Amount } from "@/components/Amount";
 import { AppHeader } from "@/components/AppHeader";
+import { VoileChargement } from "@/components/Chargement";
 import { CampaignTable } from "@/components/CampaignTable";
 import { Explain } from "@/components/Explain";
 import { Notice } from "@/components/Notice";
@@ -55,10 +56,11 @@ export default async function Page({ searchParams }: PageProps<"/">) {
 
   return (
     <>
-      <AppHeader period={period}>
+      <AppHeader period={period} genereA={new Date().toISOString()}>
         <ResultHeadline report={current} />
       </AppHeader>
 
+      <VoileChargement>
       <main className="mx-auto w-full max-w-[1240px] px-4 pt-4 pb-8 sm:px-6">
         {(fatal || warnings.length > 0) && (
           <div className="flex flex-col gap-3">
@@ -213,6 +215,7 @@ export default async function Page({ searchParams }: PageProps<"/">) {
           </Explain>
         </div>
       </main>
+      </VoileChargement>
     </>
   );
 }

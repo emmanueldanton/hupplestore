@@ -6,6 +6,32 @@ import {
   SESSION_COOKIE,
   sessionToken,
 } from "@/lib/auth";
+import { PERIOD_COOKIE, resolvePeriodFromParams } from "@/lib/period";
+
+const UN_AN = 60 * 60 * 24 * 365;
+
+/**
+ * Retient la période quand l'écran est ouvert avec « ?period=… ».
+ *
+ * Le sélecteur change de période sans recharger la page : c'est ici, et non
+ * dans la page en cours de rendu, qu'un cookie peut être écrit. Seule une
+ * période valide est retenue, `resolvePeriodFromParams` retombant sur le
+ * réglage par défaut si la plage est incohérente.
+ */
+function retenirPeriode(request: NextRequest, response: NextResponse) {
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname !== "/" || !searchParams.has("period")) return response;
+  const periode = resolvePeriodFromParams(Object.fromEntries(searchParams.entries()));
+  if (searchParams.get("period") !== periode.key) return response;
+  response.cookies.set(PERIOD_COOKIE, periode.query, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: UN_AN,
+  });
+  return response;
+}
 
 /**
  * Chemins servis sans authentification. Liste fermée et explicite : un motif
@@ -55,12 +81,12 @@ export async function proxy(request: NextRequest) {
       );
     }
     // En local, on laisse passer pour ne pas gêner le développement.
-    return NextResponse.next();
+    return retenirPeriode(request, NextResponse.next());
   }
 
   const cookie = request.cookies.get(SESSION_COOKIE)?.value;
   if (cookie && safeEqual(cookie, await sessionToken(expected))) {
-    return NextResponse.next();
+    return retenirPeriode(request, NextResponse.next());
   }
 
   const destination = request.nextUrl.clone();

@@ -145,6 +145,30 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Barre de chargement : un trait qui traverse l'écran tant que les chiffres se rechargent. */
+@keyframes barre-chargement {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
+.barre-chargement {
+  animation: barre-chargement 1.1s ease-in-out infinite;
+}
+
+/* Bloc gris qui pulse à la place d'un chiffre pas encore chargé. */
+.squelette {
+  background: var(--surface-sunken);
+  border-radius: 10px;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.squelette-clair {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% { opacity: 0.45; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

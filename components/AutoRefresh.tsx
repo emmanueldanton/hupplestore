@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useChargement } from "./Chargement";
 
 /**
  * Rafraîchit les données sans intervention.
@@ -20,19 +21,35 @@ import { useRouter } from "next/navigation";
  * d'interroger Chariow et Meta pour une page que personne ne regarde.
  *
  * `router.refresh()` relance le rendu serveur en conservant l'état client et
- * la position de défilement, contrairement à un rechargement complet.
+ * la position de défilement, contrairement à un rechargement complet. Il passe
+ * par `lancer` pour que l'écran signale qu'il se met à jour.
  */
 const INTERVALLE_MS = 120_000;
 
+/**
+ * Un retour au premier plan moins d'une minute après le dernier rendu ne
+ * relance rien : à l'ouverture d'un onglet, le navigateur signale aussitôt
+ * qu'il devient visible, et la page rechargeait des chiffres qu'elle venait de
+ * recevoir.
+ */
+const DELAI_MINIMAL_MS = 60_000;
+
 export function AutoRefresh() {
   const router = useRouter();
+  const { lancer } = useChargement();
 
   useEffect(() => {
+    let dernier = Date.now();
+    const actualiser = () => {
+      dernier = Date.now();
+      lancer(() => router.refresh());
+    };
+
     let minuteur: ReturnType<typeof setInterval> | null = null;
 
     const demarrer = () => {
       if (minuteur !== null) return;
-      minuteur = setInterval(() => router.refresh(), INTERVALLE_MS);
+      minuteur = setInterval(actualiser, INTERVALLE_MS);
     };
 
     const arreter = () => {
@@ -43,7 +60,7 @@ export function AutoRefresh() {
 
     const surVisibilite = () => {
       if (document.visibilityState === "visible") {
-        router.refresh();
+        if (Date.now() - dernier >= DELAI_MINIMAL_MS) actualiser();
         demarrer();
       } else {
         arreter();
@@ -57,6 +74,8 @@ export function AutoRefresh() {
       document.removeEventListener("visibilitychange", surVisibilite);
       arreter();
     };
+    // `lancer` change à chaque rendu du fournisseur : le minuteur ne dépend que du routeur.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   return null;

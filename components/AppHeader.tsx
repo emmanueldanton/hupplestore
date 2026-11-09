@@ -1,4 +1,6 @@
 import { BrandMark } from "./BrandMark";
+import { VoileChargement } from "./Chargement";
+import { Fraicheur } from "./Fraicheur";
 import { LogoutButton } from "./LogoutButton";
 import { PeriodSelector } from "./PeriodSelector";
 import { RefreshButton } from "./RefreshButton";
@@ -21,16 +23,22 @@ import type { Period } from "@/lib/period";
  */
 export function AppHeader({
   period,
+  genereA,
   children,
 }: {
   period: Period;
+  /** Heure du rendu serveur, pour « À jour il y a… ». */
+  genereA: string;
   children?: React.ReactNode;
 }) {
   return (
     <header className="app-header">
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-6">
         <div className="flex items-center justify-between gap-3">
-          <BrandMark size={34} />
+          <div className="flex flex-col gap-1">
+            <BrandMark size={34} />
+            <Fraicheur genereA={genereA} />
+          </div>
 
           <div className="flex items-center gap-2">
             <div className="hidden lg:block">
@@ -47,7 +55,11 @@ export function AppHeader({
           <PeriodSelector period={period} basePath="/" />
         </div>
 
-        {children && <div className="mt-6">{children}</div>}
+        {children && (
+          <div className="mt-6">
+            <VoileChargement message={false}>{children}</VoileChargement>
+          </div>
+        )}
       </div>
     </header>
   );
