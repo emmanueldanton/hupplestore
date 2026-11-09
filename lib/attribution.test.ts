@@ -443,6 +443,61 @@ describe("buildReport : série temporelle", () => {
   });
 });
 
+describe("buildReport : ensembles de pubs", () => {
+  // Depuis le 9 nov. 2026, une même campagne pousse un produit par ensemble :
+  // la ligne du tableau est l'ensemble, rattaché à sa campagne.
+  it("rattache un ensemble à son produit par le nom de l'ensemble", () => {
+    const report = buildReport({
+      ...range,
+      sales: [sale({ productId: "prd_complet" })],
+      spend: [
+        spend({ campaignId: "e1", campaignName: "ADSET-PACK-COMPLET", parentId: "c1", parentName: "ABO-PACK-INFLUENCE" }),
+        spend({ campaignId: "e2", campaignName: "ADSET-PACK-ORATEUR", parentId: "c1", parentName: "ABO-PACK-INFLUENCE" }),
+      ],
+      campaignMap: {
+        "ADSET-PACK-COMPLET": "prd_complet",
+        "ADSET-PACK-ORATEUR": "prd_orateur",
+        "ABO-PACK-INFLUENCE": "prd_influence",
+      },
+    });
+
+    const complet = report.campaigns.find((c) => c.campaignId === "e1");
+    const orateur = report.campaigns.find((c) => c.campaignId === "e2");
+    expect(complet?.productIds).toEqual(["prd_complet"]);
+    expect(complet?.netXof).toBe(4250);
+    expect(orateur?.productIds).toEqual(["prd_orateur"]);
+    expect(orateur?.netXof).toBe(0);
+    expect(complet?.parentName).toBe("ABO-PACK-INFLUENCE");
+  });
+
+  it("se rabat sur le nom de la campagne quand l'ensemble n'est pas dans la table", () => {
+    const report = buildReport({
+      ...range,
+      sales: [sale()],
+      spend: [spend({ campaignId: "e1", campaignName: "ADSET-PACK-ELOQ - SN", parentId: "c1", parentName: "ABO-PACK-ELOQ" })],
+      campaignMap: { "ABO-PACK-ELOQ": "prd_a" },
+    });
+
+    expect(report.campaigns[0].isMapped).toBe(true);
+    expect(report.campaigns[0].netXof).toBe(4250);
+    expect(report.unmappedCampaignNames).toEqual([]);
+  });
+
+  it("rattache par sa campagne un ensemble actif qui n'a pas encore diffusé", () => {
+    const report = buildReport({
+      ...range,
+      sales: [],
+      spend: [],
+      campaignMap: { "ABO-PACK-INFLUENCE": "prd_influence" },
+      activeCampaigns: [{ id: "e9", name: "ADSET-NOUVEAU", parentId: "c1", parentName: "ABO-PACK-INFLUENCE" }],
+    });
+
+    expect(report.campaigns[0].isMapped).toBe(true);
+    expect(report.campaigns[0].productIds).toEqual(["prd_influence"]);
+    expect(report.campaigns[0].parentName).toBe("ABO-PACK-INFLUENCE");
+  });
+});
+
 describe("fillDateRange", () => {
   it("inclut les deux bornes", () => {
     expect(fillDateRange("2026-08-01", "2026-08-03")).toEqual([

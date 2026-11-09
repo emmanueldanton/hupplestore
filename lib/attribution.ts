@@ -12,8 +12,9 @@ import type {
 } from "./types";
 
 /**
- * Table de correspondance campagne -> produit(s).
- * La clé est le nom exact de la campagne dans Meta, ou son identifiant.
+ * Table de correspondance ensemble ou campagne -> produit(s).
+ * La clé est le nom exact de l'ensemble de pubs ou de la campagne dans Meta,
+ * ou son identifiant.
  */
 export type CampaignMap = Record<string, string | string[]>;
 
@@ -26,19 +27,24 @@ function normalizeMap(map: CampaignMap): Map<string, string[]> {
 }
 
 /**
- * Prend l'identité de la campagne plutôt qu'une ligne de dépense complète :
- * une campagne active sans diffusion doit pouvoir être mappée elle aussi,
- * et elle n'a par définition aucune dépense à présenter.
+ * Prend l'identité de l'ensemble plutôt qu'une ligne de dépense complète :
+ * un ensemble actif sans diffusion doit pouvoir être mappé lui aussi,
+ * et il n'a par définition aucune dépense à présenter.
+ *
+ * L'ensemble passe avant sa campagne : une campagne peut pousser un produit
+ * différent dans chacun de ses ensembles. La campagne sert de repli, ce qui
+ * garde mappées les campagnes historiques à un seul produit.
  */
 function lookupProducts(
   map: Map<string, string[]>,
-  campaign: { campaignId: string; campaignName: string },
+  unit: { campaignId: string; campaignName: string; parentId?: string; parentName?: string },
 ): string[] {
-  return (
-    map.get(campaign.campaignName.trim().toLowerCase()) ??
-    map.get(campaign.campaignId.trim().toLowerCase()) ??
-    []
-  );
+  const keys = [unit.campaignName, unit.campaignId, unit.parentName, unit.parentId];
+  for (const key of keys) {
+    const products = key ? map.get(key.trim().toLowerCase()) : undefined;
+    if (products) return products;
+  }
+  return [];
 }
 
 interface Bucket {
@@ -90,7 +96,7 @@ export function buildReport(params: {
    * Campagnes actives selon la structure du compte. Celles qui n'ont pas
    * encore diffusé sont ajoutées à zéro, pour qu'un lancement récent se voie.
    */
-  activeCampaigns?: { id: string; name: string }[];
+  activeCampaigns?: { id: string; name: string; parentId?: string; parentName?: string }[];
   /**
    * Nombre de jours pendant lesquels une dépense peut revendiquer une vente.
    * 0 signifie le jour même uniquement. Voir la note sur la sensibilité dans
@@ -107,13 +113,14 @@ export function buildReport(params: {
   const spendByDay = new Map<string, Map<string, AdSpendRecord>>();
   const campaignInfo = new Map<
     string,
-    { name: string; products: string[]; isMapped: boolean }
+    { name: string; parentName?: string; products: string[]; isMapped: boolean }
   >();
 
   for (const record of spend) {
     const products = lookupProducts(map, record);
     campaignInfo.set(record.campaignId, {
       name: record.campaignName,
+      parentName: record.parentName,
       products,
       isMapped: products.length > 0,
     });
@@ -146,9 +153,12 @@ export function buildReport(params: {
     const products = lookupProducts(map, {
       campaignId: active.id,
       campaignName: active.name,
+      parentId: active.parentId,
+      parentName: active.parentName,
     });
     campaignInfo.set(active.id, {
       name: active.name,
+      parentName: active.parentName,
       products,
       isMapped: products.length > 0,
     });
@@ -309,6 +319,7 @@ export function buildReport(params: {
           : UNKNOWN_CONFIDENCE,
         campaignId,
         campaignName: info.name,
+        parentName: info.parentName,
         productIds: info.products,
         isMapped: info.isMapped,
         hasDelivery: totals.impressions > 0 || totals.spendXof > 0,

@@ -28,11 +28,17 @@ export interface SaleRecord {
   country: string | null;
 }
 
-/** Une ligne de dépense publicitaire Meta, pour un jour et une campagne. */
+/**
+ * Une ligne de dépense publicitaire Meta, pour un jour et un ensemble de pubs.
+ * `campaignId` et `campaignName` désignent l'unité d'attribution (l'ensemble) ;
+ * `parentId` et `parentName`, sa campagne.
+ */
 export interface AdSpendRecord {
   date: string;
   campaignId: string;
   campaignName: string;
+  parentId?: string;
+  parentName?: string;
   /** Dépense convertie en XOF. */
   spendXof: number;
   /** Dépense brute telle que renvoyée par Meta, dans la devise du compte. */
@@ -46,6 +52,8 @@ export interface AdSpendRecord {
 export interface CampaignPerformance {
   campaignId: string;
   campaignName: string;
+  /** Campagne de l'ensemble, affichée au-dessus de son nom. */
+  parentName?: string;
   /** Produits rattachés via config/campaign-map.json. Vide = non mappée. */
   productIds: string[];
   isMapped: boolean;
