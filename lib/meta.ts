@@ -6,6 +6,8 @@ const DEFAULT_API_VERSION = "v23.0";
 interface MetaInsightRow {
   campaign_id?: string;
   campaign_name?: string;
+  adset_id?: string;
+  adset_name?: string;
   spend?: string;
   impressions?: string;
   clicks?: string;
@@ -30,9 +32,12 @@ export class MetaError extends Error {
   }
 }
 
+/** Un ensemble de pubs actif, avec sa campagne. */
 export interface MetaCampaign {
   id: string;
   name: string;
+  parentId?: string;
+  parentName?: string;
 }
 
 /**
@@ -139,33 +144,34 @@ export interface MetaInsightsResult {
   records: AdSpendRecord[];
   accountCurrency: string | null;
   /**
-   * Campagnes actuellement actives, diffusion ou non.
+   * Ensembles de pubs actuellement actifs, diffusion ou non.
    *
-   * L'endpoint Insights ne renvoie une ligne que si la campagne a servi au
-   * moins une impression. Une campagne lancée il y a une heure est donc
-   * totalement absente des performances, ce qui donne l'impression que
-   * l'application ne la voit pas. On récupère la structure séparément pour
-   * qu'elle apparaisse, à zéro, plutôt que de disparaître.
+   * L'endpoint Insights ne renvoie une ligne que si l'ensemble a servi au
+   * moins une impression. Un ensemble lancé il y a une heure est donc
+   * totalement absent des performances, ce qui donne l'impression que
+   * l'application ne le voit pas. On récupère la structure séparément pour
+   * qu'il apparaisse, à zéro, plutôt que de disparaître.
    */
   activeCampaigns: MetaCampaign[];
 }
 
-interface CampaignRow {
+interface AdSetRow {
   id?: string;
   name?: string;
   effective_status?: string;
+  campaign?: { id?: string; name?: string };
 }
 
-/** Campagnes en cours de diffusion selon la structure du compte. */
-async function fetchActiveCampaigns(
+/** Ensembles de pubs en cours de diffusion selon la structure du compte. */
+async function fetchActiveAdSets(
   accountId: string,
   version: string,
   accessToken: string,
 ): Promise<MetaCampaign[]> {
   const url = new URL(
-    `https://graph.facebook.com/${version}/${accountId}/campaigns`,
+    `https://graph.facebook.com/${version}/${accountId}/adsets`,
   );
-  url.searchParams.set("fields", "id,name,effective_status");
+  url.searchParams.set("fields", "id,name,effective_status,campaign{id,name}");
   url.searchParams.set("limit", "200");
   url.searchParams.set("access_token", accessToken);
 
@@ -173,7 +179,7 @@ async function fetchActiveCampaigns(
     next: { revalidate: 60, tags: ["meta"] },
   });
   const payload = (await response.json()) as {
-    data?: CampaignRow[];
+    data?: AdSetRow[];
     error?: { message: string };
   };
 
@@ -183,15 +189,21 @@ async function fetchActiveCampaigns(
 
   return payload.data
     .filter((c) => c.effective_status === "ACTIVE" && c.id && c.name)
-    .map((c) => ({ id: c.id!, name: c.name! }));
+    .map((c) => ({
+      id: c.id!,
+      name: c.name!,
+      parentId: c.campaign?.id,
+      parentName: c.campaign?.name,
+    }));
 }
 
 /**
- * Récupère la dépense publicitaire jour par jour et campagne par campagne.
+ * Récupère la dépense publicitaire jour par jour et ensemble par ensemble.
  *
  * `time_increment=1` impose un découpage quotidien : sans lui, Meta agrège
  * toute la période en une ligne, ce qui rendrait la jointure par jour
- * impossible. `level=campaign` fixe la granularité à la campagne.
+ * impossible. `level=adset` fixe la granularité à l'ensemble de pubs : une même
+ * campagne peut pousser un produit différent dans chacun de ses ensembles.
  *
  * Attention : Meta agrège selon le fuseau horaire du compte publicitaire, là où
  * Chariow horodate en UTC. Sur une fenêtre courte, un décalage d'un jour peut
@@ -215,11 +227,11 @@ export async function fetchAdSpend(
   const url = new URL(
     `https://graph.facebook.com/${version}/${accountId}/insights`,
   );
-  url.searchParams.set("level", "campaign");
+  url.searchParams.set("level", "adset");
   url.searchParams.set("time_increment", "1");
   url.searchParams.set(
     "fields",
-    "campaign_id,campaign_name,spend,impressions,clicks,account_currency",
+    "campaign_id,campaign_name,adset_id,adset_name,spend,impressions,clicks,account_currency",
   );
   url.searchParams.set("time_range", JSON.stringify({ since: from, until: to }));
   url.searchParams.set("limit", "500");
@@ -261,8 +273,10 @@ export async function fetchAdSpend(
 
       records.push({
         date: row.date_start ?? from,
-        campaignId: row.campaign_id ?? "inconnu",
-        campaignName: row.campaign_name ?? "Campagne sans nom",
+        campaignId: row.adset_id ?? row.campaign_id ?? "inconnu",
+        campaignName: row.adset_name ?? row.campaign_name ?? "Ensemble sans nom",
+        parentId: row.campaign_id,
+        parentName: row.campaign_name,
         spendRaw,
         spendXof: toXof(spendRaw, currency),
         currency,
@@ -275,7 +289,7 @@ export async function fetchAdSpend(
     pages += 1;
   }
 
-  const activeCampaigns = await fetchActiveCampaigns(
+  const activeCampaigns = await fetchActiveAdSets(
     accountId,
     version,
     options.accessToken,

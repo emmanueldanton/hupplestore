@@ -42,6 +42,11 @@ export function CampaignRow({
         </svg>
 
         <span className="min-w-0 flex-1">
+          {campaign.parentName && campaign.parentName !== campaign.campaignName && (
+            <span className="block truncate text-[0.68rem] text-ink-muted">
+              {campaign.parentName}
+            </span>
+          )}
           <span className="block truncate text-[0.88rem] font-medium text-ink">
             {campaign.campaignName}
           </span>
