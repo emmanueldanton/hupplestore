@@ -1,15 +1,22 @@
 {
   "_lisez_moi": [
-    "Table de correspondance : campagne Facebook vers produit(s) HUPPLE STORE.",
-    "La clé est le NOM EXACT de la campagne dans le gestionnaire de publicités",
+    "Table de correspondance : ensemble de pubs ou campagne Facebook vers produit(s) HUPPLE STORE.",
+    "La clé est le NOM EXACT de l'ensemble de pubs ou de la campagne dans le gestionnaire de publicités",
     "(la casse et les espaces de bord sont ignorés), ou son identifiant numérique.",
     "La valeur est un identifiant produit, ou une liste si la campagne en pousse plusieurs.",
+    "L'ensemble passe avant sa campagne : la campagne ne sert que si l'ensemble est absent de la table.",
     "Toute campagne absente de cette table apparaît en 'Non mappée' dans le tableau de bord :",
     "sa dépense est comptée, mais aucun revenu ne lui est attribué.",
     "Cette clé _lisez_moi est ignorée par le code."
   ],
 
   "_produits_disponibles": {
+    "prd_qelqqfnz": "Pack Influence Complet (bundle : Charisme, Lire les Gens, Persuasion)",
+    "prd_xx03v2g0": "Pack Complet (les 7 livres et le carnet)",
+    "prd_dzg4cn4m": "Crée la Nouvelle Version de Toi (avec son carnet)",
+    "prd_21ahwbbf": "Le Charisme en 21 Jours",
+    "prd_5anx53zi": "Lire les Gens en 5 Minutes",
+    "prd_805o5x4m": "L'Art de la Persuasion",
     "prd_ldghh81q": "Dire NON Sans Culpabiliser",
     "prd_4qpa9s": "Deviens l'Orateur qu'on Écoute, 3 900 F, 149 ventes",
     "prd_qgn2mj": "92 Techniques pour Engager la Conversation, 3 900 F, 47 ventes",
@@ -42,6 +49,14 @@
   ],
 
   "mapping": {
+    "ADSET-PACK-COMPLET - AFRIQUE FR": "prd_xx03v2g0",
+    "ADSET-INFLUENCE-2PUBS - AFRIQUE FR": "prd_qelqqfnz",
+    "ADSET-PACK-INFLUENCE - AFRIQUE FR": "prd_qelqqfnz",
+    "ADSET-PACK-ORATEUR - AFRIQUE FR": "prd_umqgm8su",
+    "ABO-PACK-INFLUENCE": "prd_qelqqfnz",
+    "BF-OFFRES": ["prd_xx03v2g0", "prd_dzg4cn4m", "prd_qelqqfnz", "prd_umqgm8su"],
+    "BF-RELANCE": ["prd_xx03v2g0", "prd_dzg4cn4m", "prd_qelqqfnz", "prd_umqgm8su"],
+
     "CBO-NON": "prd_ldghh81q",
 
     "CBO-DP - ELOQ": "prd_4qpa9s",
